@@ -1,0 +1,155 @@
+{
+  "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
+  "id": "au.com.brivis.touch",
+  "version": "1.0.0",
+  "compatibility": ">=12.4.0",
+  "sdk": 3,
+  "runtime": "nodejs",
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "Brivis Touch"
+  },
+  "description": {
+    "en": "Control your Brivis ducted gas heating and evaporative cooling system via the Brivis Touch Wi-Fi module (formerly known as Rinnai Touch)."
+  },
+  "category": [
+    "climate"
+  ],
+  "brandColor": "#132A4D",
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "John Bothe",
+    "email": "jbothe@gmail.com"
+  },
+  "drivers": [
+    {
+      "id": "zone",
+      "name": {
+        "en": "Brivis Touch Zone"
+      },
+      "class": "thermostat",
+      "capabilities": [
+        "target_temperature",
+        "measure_temperature",
+        "rt_zone_active",
+        "onoff",
+        "rt_operating_mode",
+        "onoff.fan",
+        "rt_fan_speed",
+        "onoff.pump"
+      ],
+      "capabilitiesOptions": {
+        "target_temperature": {
+          "min": 8,
+          "max": 30,
+          "step": 1,
+          "decimals": 0
+        },
+        "onoff": {
+          "title": {
+            "en": "System Power"
+          }
+        },
+        "onoff.fan": {
+          "title": {
+            "en": "Circulation Fan"
+          }
+        },
+        "onoff.pump": {
+          "title": {
+            "en": "Evaporative Pump"
+          }
+        }
+      },
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "lan"
+      ],
+      "images": {
+        "small": "/drivers/zone/assets/images/small.png",
+        "large": "/drivers/zone/assets/images/large.png"
+      },
+      "pair": [
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ]
+    }
+  ],
+  "capabilities": {
+    "rt_fan_speed": {
+      "type": "number",
+      "title": {
+        "en": "Fan speed"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "slider",
+      "min": 1,
+      "max": 16,
+      "step": 1,
+      "decimals": 0
+    },
+    "rt_operating_mode": {
+      "type": "enum",
+      "title": {
+        "en": "Operating mode"
+      },
+      "getable": true,
+      "setable": true,
+      "uiComponent": "picker",
+      "values": [
+        {
+          "id": "heat",
+          "title": {
+            "en": "Heat"
+          }
+        },
+        {
+          "id": "cool",
+          "title": {
+            "en": "Cool"
+          }
+        },
+        {
+          "id": "evap",
+          "title": {
+            "en": "Evaporative"
+          }
+        }
+      ]
+    },
+    "rt_zone_active": {
+      "type": "boolean",
+      "title": {
+        "en": "Actively heating/cooling"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "insightsTitleTrue": {
+        "en": "Started actively heating/cooling"
+      },
+      "insightsTitleFalse": {
+        "en": "Stopped actively heating/cooling"
+      }
+    }
+  }
+}

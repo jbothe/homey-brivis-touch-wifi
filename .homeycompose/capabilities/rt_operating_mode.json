@@ -1,0 +1,29 @@
+{
+  "type": "enum",
+  "title": {
+    "en": "Operating mode"
+  },
+  "getable": true,
+  "setable": true,
+  "uiComponent": "picker",
+  "values": [
+    {
+      "id": "heat",
+      "title": {
+        "en": "Heat"
+      }
+    },
+    {
+      "id": "cool",
+      "title": {
+        "en": "Cool"
+      }
+    },
+    {
+      "id": "evap",
+      "title": {
+        "en": "Evaporative"
+      }
+    }
+  ]
+}

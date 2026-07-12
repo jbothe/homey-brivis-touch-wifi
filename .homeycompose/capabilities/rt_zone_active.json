@@ -1,0 +1,15 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Actively heating/cooling"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "insightsTitleTrue": {
+    "en": "Started actively heating/cooling"
+  },
+  "insightsTitleFalse": {
+    "en": "Stopped actively heating/cooling"
+  }
+}

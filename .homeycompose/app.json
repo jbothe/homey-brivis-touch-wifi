@@ -1,0 +1,30 @@
+{
+  "id": "au.com.brivis.touch",
+  "version": "1.0.0",
+  "compatibility": ">=12.4.0",
+  "sdk": 3,
+  "runtime": "nodejs",
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "Brivis Touch"
+  },
+  "description": {
+    "en": "Control your Brivis ducted gas heating and evaporative cooling system via the Brivis Touch Wi-Fi module (formerly known as Rinnai Touch)."
+  },
+  "category": [
+    "climate"
+  ],
+  "brandColor": "#132A4D",
+  "permissions": [],
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "John Bothe",
+    "email": "jbothe@gmail.com"
+  }
+}

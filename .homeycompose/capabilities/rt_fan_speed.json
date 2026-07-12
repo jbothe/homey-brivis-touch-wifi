@@ -1,0 +1,13 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Fan speed"
+  },
+  "getable": true,
+  "setable": true,
+  "uiComponent": "slider",
+  "min": 1,
+  "max": 16,
+  "step": 1,
+  "decimals": 0
+}
