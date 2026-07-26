@@ -28,10 +28,14 @@ module only accepts one TCP connection at a time.
 
 ```sh
 npm install
-npm run build            # tsc typecheck
+npm run build             # tsc typecheck
+npm run lint
 homey app validate --level debug
-homey app run             # run against a real Homey on the same LAN as the module
+homey app run              # run against a real Homey on the same LAN as the module
 ```
+
+CI (`.github/workflows/`) runs lint, test and `homey app validate --level verified` on every push,
+plus manual workflows to bump the app version and publish.
 
 ## Project layout
 

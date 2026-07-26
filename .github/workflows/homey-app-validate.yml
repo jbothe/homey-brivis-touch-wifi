@@ -1,0 +1,34 @@
+name: Validate Homey App
+on:
+  workflow_dispatch:
+  push:
+  pull_request:
+
+jobs:
+  main:
+    name: Validate Homey App
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # The validate action compiles the app with `npx tsc --showConfig`, and tsconfig.json
+      # extends @tsconfig/node16/tsconfig.json - which lives in node_modules. Without this
+      # install step the extends can't resolve (TS6053), tsc bails, and the action reports the
+      # far less obvious "Tsconfig validation failed: unable to read configuration". The stock
+      # Athom skeleton omits it, so this fails on any TypeScript app whose tsconfig extends a
+      # package. Keep it ahead of every athombv/* step that compiles.
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      # The manifest validation below is only part of the story - the unit tests (lib/ logic) and
+      # lint are enforced here too, since nothing else in CI runs them. Ordered before the validate
+      # action so a logic/style regression surfaces ahead of a manifest one.
+      - run: npm run lint
+      - run: npm test
+
+      - uses: athombv/github-action-homey-app-validate@master
+        with:
+          level: verified
