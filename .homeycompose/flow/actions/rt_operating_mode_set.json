@@ -1,0 +1,28 @@
+{
+  "id": "rt_operating_mode_set",
+  "title": {
+    "en": "Set the operating mode to"
+  },
+  "titleFormatted": {
+    "en": "Set the operating mode to [[rt_operating_mode]]"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=zone"
+    },
+    {
+      "name": "rt_operating_mode",
+      "type": "dropdown",
+      "title": {
+        "en": "mode"
+      },
+      "values": [
+        { "id": "heat", "title": { "en": "Heat" } },
+        { "id": "cool", "title": { "en": "Cool" } },
+        { "id": "evap", "title": { "en": "Evaporative" } }
+      ]
+    }
+  ]
+}

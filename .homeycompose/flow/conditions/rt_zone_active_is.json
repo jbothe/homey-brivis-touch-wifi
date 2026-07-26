@@ -1,0 +1,13 @@
+{
+  "id": "rt_zone_active_is",
+  "title": {
+    "en": "Zone !{{is|is not}} actively heating/cooling"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=zone"
+    }
+  ]
+}

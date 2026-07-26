@@ -1,0 +1,26 @@
+{
+  "id": "rt_fan_speed_set",
+  "title": {
+    "en": "Set the fan speed to"
+  },
+  "titleFormatted": {
+    "en": "Set the fan speed to [[rt_fan_speed]]"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=zone"
+    },
+    {
+      "name": "rt_fan_speed",
+      "type": "number",
+      "title": {
+        "en": "speed"
+      },
+      "min": 1,
+      "max": 16,
+      "step": 1
+    }
+  ]
+}

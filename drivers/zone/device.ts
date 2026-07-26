@@ -16,6 +16,12 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
 
   private lastOnoffTitle: string | undefined;
 
+  // undefined until the first real sync, so pairing/boot doesn't fire a
+  // spurious "changed" trigger for the initial value.
+  private lastMode: RinnaiMode | undefined;
+
+  private lastZoneActive: boolean | undefined;
+
   private pumpListenerRegistered = false;
 
   private pumpCapabilityPending = false;
@@ -26,6 +32,10 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
       await this.addCapability('rt_zone_active');
     }
 
+    // capabilitiesOptions.step is 1 (see driver.compose.json) and the device
+    // detail thermostat UI respects that, but the Homey dashboard widget's
+    // +/- arrows ignore it and always step by 0.5. That's a platform bug,
+    // not something fixable here: https://github.com/athombv/homey-apps-sdk-issues/issues/448
     this.registerCapabilityListener('target_temperature', async (value: number) => {
       await this.app.rinnai.setTargetTemperature(value, this.zone);
     });
@@ -83,7 +93,14 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
       this.setCapabilityValue('measure_temperature', currentTemp).catch((err) => this.error(err));
     }
 
-    this.setCapabilityValue('rt_zone_active', rinnai.getAutoEnabled(zone)).catch((err) => this.error(err));
+    const zoneActive = rinnai.getAutoEnabled(zone);
+    this.setCapabilityValue('rt_zone_active', zoneActive).catch((err) => this.error(err));
+    if (this.lastZoneActive !== undefined && this.lastZoneActive !== zoneActive) {
+      this.homey.flow.getDeviceTriggerCard('rt_zone_active_changed')
+        .trigger(this, { rt_zone_active: zoneActive }, {})
+        .catch((err) => this.error(err));
+    }
+    this.lastZoneActive = zoneActive;
 
     const targetTemp = rinnai.getTargetTemperature(zone);
     if (targetTemp !== undefined) {
@@ -105,6 +122,12 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
 
     if (rinnai.mode !== undefined) {
       this.setCapabilityValue('rt_operating_mode', rinnai.mode).catch((err) => this.error(err));
+      if (this.lastMode !== undefined && this.lastMode !== rinnai.mode) {
+        this.homey.flow.getDeviceTriggerCard('rt_operating_mode_changed')
+          .trigger(this, {}, { rt_operating_mode: rinnai.mode })
+          .catch((err) => this.error(err));
+      }
+      this.lastMode = rinnai.mode;
     }
 
     this.setCapabilityValue('onoff.fan', rinnai.getFanState()).catch((err) => this.error(err));
@@ -163,4 +186,3 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
 }
 
 module.exports = ZoneDevice;
-export type { ZoneDevice };

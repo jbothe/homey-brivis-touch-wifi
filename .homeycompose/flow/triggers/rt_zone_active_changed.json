@@ -1,0 +1,22 @@
+{
+  "id": "rt_zone_active_changed",
+  "title": {
+    "en": "Actively heating/cooling changed"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=zone"
+    }
+  ],
+  "tokens": [
+    {
+      "name": "rt_zone_active",
+      "type": "boolean",
+      "title": {
+        "en": "Actively heating/cooling"
+      }
+    }
+  ]
+}
