@@ -30,6 +30,7 @@ module only accepts one TCP connection at a time.
 npm install
 npm run build             # tsc typecheck
 npm run lint
+npm test                  # runs test/*.test.ts via node's built-in test runner
 homey app validate --level debug
 homey app run              # run against a real Homey on the same LAN as the module
 ```
@@ -42,6 +43,8 @@ plus manual workflows to bump the app version and publish.
 - `lib/rinnai/` — vendored protocol core (TCP/UDP discovery, status parsing, command protocol)
   plus `RinnaiConnection.ts`, the typed wrapper the rest of the app talks to.
 - `drivers/zone/` — the Homey driver/device implementation.
+- `test/` — unit tests for the vendored protocol core's path-resolution logic (the highest-risk
+  reverse-engineered piece).
 - `.homeycompose/` — source of truth for `app.json` (generated — do not edit `app.json` directly).
 
 ## Status
