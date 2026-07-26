@@ -37,6 +37,11 @@ changes made outside Homey — at a wall controller, or the phone app — `app.t
 refresh state, logging a one-line snapshot of the full state (mode, on/off, fan, pump, and every
 per-zone field) on each successful poll.
 
+After three consecutive failed polls (~45s) the zone devices are marked unavailable rather than
+continuing to serve their last known values, and become available again on the next successful poll.
+A command the module never acknowledges (three attempts) fails the capability, so Homey reverts the
+value instead of showing a setpoint the unit never took.
+
 ## Flow cards
 
 - **Operating mode** — trigger (changed to), condition (is/is not), action (set to), for

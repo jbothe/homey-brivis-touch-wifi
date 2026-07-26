@@ -9,6 +9,11 @@ const INIT_RETRY_MS = 30000;
 // connection idle-closes after a few seconds. Poll to pick up changes made
 // outside Homey (wall controllers, phone app) while the app is idle.
 const POLL_INTERVAL_MS = 15000;
+// A single failed poll is routine (a command holding the queue, a dropped
+// frame). Only after this many consecutive failures - about 45 sec - do the
+// devices stop being trustworthy enough to keep showing their last values.
+const POLL_FAILURES_BEFORE_UNAVAILABLE = 3;
+const UNAVAILABLE_MESSAGE = 'Lost connection to the Brivis Touch module';
 
 export interface RinnaiSyncableDevice {
   syncFromService(): void;
@@ -21,6 +26,10 @@ class RinnaiTouchApp extends Homey.App {
   private pollTimer?: NodeJS.Timeout;
 
   private polling = false;
+
+  private pollFailures = 0;
+
+  private devicesUnavailable = false;
 
   async onInit() {
     // No address override for v1 - the module is always found via UDP
@@ -74,12 +83,47 @@ class RinnaiTouchApp extends Homey.App {
     this.polling = true;
     try {
       await this.rinnai.refresh();
+      this.onPollSucceeded();
       this.logState();
     } catch (error) {
-      this.error('Poll failed', error);
+      this.onPollFailed(error);
     } finally {
       this.polling = false;
     }
+  }
+
+  private onPollSucceeded(): void {
+    this.pollFailures = 0;
+
+    if (!this.devicesUnavailable) {
+      return;
+    }
+    this.devicesUnavailable = false;
+    this.log('Reconnected to the Brivis Touch module');
+
+    // syncFromService() also marks devices available, but only runs when the
+    // status actually changed - and a module that comes back reporting exactly
+    // what it reported before would otherwise stay unavailable forever.
+    this.forEachDevice((device) => {
+      device.setAvailable().catch((err) => this.error(err));
+    });
+  }
+
+  private onPollFailed(error: unknown): void {
+    this.error('Poll failed', error);
+
+    this.pollFailures += 1;
+    if (this.devicesUnavailable || this.pollFailures < POLL_FAILURES_BEFORE_UNAVAILABLE) {
+      return;
+    }
+
+    // Without this the devices keep serving their last known values as if live,
+    // indefinitely - the app only ever marked them unavailable at boot.
+    this.devicesUnavailable = true;
+    this.error(`No response from the module after ${this.pollFailures} polls, marking devices unavailable`);
+    this.forEachDevice((device) => {
+      device.setUnavailable(UNAVAILABLE_MESSAGE).catch((err) => this.error(err));
+    });
   }
 
   private logState(): void {
@@ -91,7 +135,19 @@ class RinnaiTouchApp extends Homey.App {
     // so this is diagnostic: it lets us see which field actually tracks
     // reality before wiring more of it into capabilities.
     const zones = rinnai.controllers
-      .map((zone) => `${zone}(${rinnai.getZoneName(zone)}): target=${rinnai.getTargetTemperature(zone)} current=${rinnai.getCurrentTemperature(zone)} userEnabled=${rinnai.getUserEnabled(zone)} autoEnabled=${rinnai.getAutoEnabled(zone)} systemActive=${rinnai.getSystemActive(zone)} controlMode=${rinnai.getControlMode(zone)} scheduleOverride=${rinnai.getScheduleOverride(zone)}`)
+      .map((zone) => {
+        const target = rinnai.getTargetTemperature(zone);
+        const current = rinnai.getCurrentTemperature(zone);
+        const userEnabled = rinnai.getUserEnabled(zone);
+        const autoEnabled = rinnai.getAutoEnabled(zone);
+        const systemActive = rinnai.getSystemActive(zone);
+        const controlMode = rinnai.getControlMode(zone);
+        const scheduleOverride = rinnai.getScheduleOverride(zone);
+        return `${zone}(${rinnai.getZoneName(zone)}): `
+          + `target=${target} current=${current} `
+          + `userEnabled=${userEnabled} autoEnabled=${autoEnabled} systemActive=${systemActive} `
+          + `controlMode=${controlMode} scheduleOverride=${scheduleOverride}`;
+      })
       .join(' | ');
 
     const pump = rinnai.hasEvaporative ? ` pump=${rinnai.getPumpState()}` : '';
@@ -100,6 +156,12 @@ class RinnaiTouchApp extends Homey.App {
   }
 
   private syncDevices(): void {
+    this.forEachDevice((device) => {
+      (device as unknown as RinnaiSyncableDevice).syncFromService();
+    });
+  }
+
+  private forEachDevice(fn: (device: Homey.Device) => void): void {
     for (const driverId of DRIVER_IDS) {
       let devices: Homey.Device[];
       try {
@@ -108,9 +170,9 @@ class RinnaiTouchApp extends Homey.App {
         continue;
       }
 
-      for (const device of devices as unknown as RinnaiSyncableDevice[]) {
+      for (const device of devices) {
         try {
-          device.syncFromService();
+          fn(device);
         } catch (error) {
           this.error(error);
         }

@@ -13,8 +13,25 @@ export type RinnaiZone = 'U' | 'A' | 'B' | 'C' | 'D';
 export interface RinnaiConnectionOptions {
   address?: string;
   port?: number;
-  connectionTimeout?: number;
+
+  /**
+   * How long to hold the connection open after the request queue drains, in ms.
+   * The module accepts one TCP client at a time, so this is the window in which
+   * other clients (the phone app, a wall controller's app) are locked out.
+   * Negative keeps the connection open indefinitely, 0 closes immediately.
+   *
+   * Was named `connectionTimeout`, which it never was: connect attempts are
+   * bounded inside RinnaiTouchTcp, and this value has no bearing on them.
+   */
+  idleCloseDelay?: number;
+
+  /**
+   * How long to wait *after* closing the socket before treating the connection
+   * as closed, in ms - the module needs a moment to free its single connection
+   * slot before it will accept a new one.
+   */
   closeConnectionDelay?: number;
+
   debug?: boolean;
 }
 
@@ -27,25 +44,43 @@ const CONTROL_MODE_TO_STRING: Record<number, RinnaiControlMode> = { 0: 'manual',
 export type RinnaiScheduleOverride = 'none' | 'advance' | 'operation';
 const SCHEDULE_OVERRIDE_TO_STRING: Record<number, RinnaiScheduleOverride> = { 0: 'none', 1: 'advance', 2: 'operation' };
 
+// How old the last status frame may be before refresh() calls the read a
+// failure. A successful read returns just after a frame arrives, and the
+// module streams roughly one a second while connected, so anything this old
+// means the read never landed. Generous enough to cover a reconnect
+// (discovery + handshake) inside a single poll.
+const STALE_STATUS_MS = 10000;
+
 /**
  * Thin typed wrapper around the vendored RinnaiTouchRepository/RinnaiTouchService
  * (adapted from homebridge-rinnai-touch-plugin, see NOTICE.md). This is the only
  * class the rest of the app talks to - drivers/devices never touch the vendored
  * files directly.
+ *
+ * Every setX() method rejects if the module does not acknowledge the command
+ * (three attempts, then give up). Capability listeners depend on that: a
+ * rejection is what makes Homey revert the optimistic value instead of showing
+ * a setpoint the unit never accepted.
  */
 export class RinnaiConnection {
+  // The vendored files have no type declarations (see NOTICE.md) - `any` is
+  // the honest type here, not a shortcut. Everything below re-exposes their
+  // surface with real types, so untyped-ness never leaks past this file.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private readonly service: any;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private readonly repository: any;
 
   private initPromise: Promise<void> | null = null;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(logFn: (...args: any[]) => void, options: RinnaiConnectionOptions = {}) {
     const log = new Logger(logFn, options.debug ?? false);
     const settings = {
       address: options.address,
       port: options.port,
-      connectionTimeout: options.connectionTimeout ?? 5000,
+      idleCloseDelay: options.idleCloseDelay ?? 5000,
       closeConnectionDelay: options.closeConnectionDelay ?? 1100,
     };
 
@@ -73,17 +108,27 @@ export class RinnaiConnection {
    * Force a fresh status read from the module. Used for polling so that
    * changes made outside Homey (wall controllers, phone app) are picked up
    * while the app is otherwise idle. The underlying service re-emits
-   * 'updated' if anything actually changed; errors are handled internally
-   * (a failed poll is logged, not thrown).
+   * 'updated' if anything actually changed.
+   *
+   * The service swallows its own read errors (see updateStates), so a failed
+   * poll is detected here by checking that a status frame actually arrived
+   * rather than by catching - otherwise a module that has been offline for
+   * hours looks exactly like one where nothing has changed.
    */
   async refresh(): Promise<void> {
     await this.service.updateStates();
+
+    const timestamp: number | undefined = this.repository.lastStatusTimestamp;
+    if (timestamp === undefined || Date.now() - timestamp > STALE_STATUS_MS) {
+      throw new Error('No status received from the Rinnai Touch module');
+    }
   }
 
   async close(): Promise<void> {
     await this.repository.closeConnection();
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   on(event: 'updated' | 'mode', listener: (...args: any[]) => void): void {
     this.service.on(event, listener);
   }
