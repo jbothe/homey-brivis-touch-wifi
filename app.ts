@@ -13,6 +13,9 @@ const POLL_INTERVAL_MS = 15000;
 // frame). Only after this many consecutive failures - about 45 sec - do the
 // devices stop being trustworthy enough to keep showing their last values.
 const POLL_FAILURES_BEFORE_UNAVAILABLE = 3;
+// Ceiling on the backoff below. Once the module is unreachable there is
+// nothing to poll for, so this is purely how quickly we notice it coming back.
+const POLL_BACKOFF_MAX_MS = 300000;
 const UNAVAILABLE_MESSAGE = 'Lost connection to the Brivis Touch module';
 
 export interface RinnaiSyncableDevice {
@@ -25,11 +28,11 @@ class RinnaiTouchApp extends Homey.App {
 
   private pollTimer?: NodeJS.Timeout;
 
-  private polling = false;
-
   private pollFailures = 0;
 
   private devicesUnavailable = false;
+
+  private stopped = false;
 
   async onInit() {
     // No address override for v1 - the module is always found via UDP
@@ -45,8 +48,9 @@ class RinnaiTouchApp extends Homey.App {
   }
 
   async onUninit() {
+    this.stopped = true;
     if (this.pollTimer) {
-      this.homey.clearInterval(this.pollTimer);
+      this.homey.clearTimeout(this.pollTimer);
     }
     await this.rinnai.close();
   }
@@ -71,16 +75,39 @@ class RinnaiTouchApp extends Homey.App {
     if (this.pollTimer) {
       return;
     }
-    this.pollTimer = this.homey.setInterval(() => this.poll(), POLL_INTERVAL_MS);
+    this.scheduleNextPoll();
+  }
+
+  /**
+   * Self-scheduling rather than setInterval: the delay has to grow while the
+   * module is unreachable, and a poll that runs long must not have the next one
+   * fire on top of it - every request funnels through one serialized connection.
+   */
+  private scheduleNextPoll(): void {
+    if (this.stopped) {
+      return;
+    }
+    this.pollTimer = this.homey.setTimeout(() => this.poll(), this.nextPollDelay());
+  }
+
+  /**
+   * Steady state polls at the fixed interval. Once the module has stopped
+   * answering, back off exponentially to POLL_BACKOFF_MAX_MS: a module whose
+   * TCP listener has gone away (UDP discovery still answers, the connect gets
+   * ECONNREFUSED) stays that way for hours, and retrying every 15 sec neither
+   * brings it back nor tells us anything - it just buries the log. Each failed
+   * poll costs three connect attempts, so the flat interval was ~17k connects
+   * and ~69k log lines a day.
+   */
+  private nextPollDelay(): number {
+    if (this.pollFailures < POLL_FAILURES_BEFORE_UNAVAILABLE) {
+      return POLL_INTERVAL_MS;
+    }
+    const steps = this.pollFailures - POLL_FAILURES_BEFORE_UNAVAILABLE;
+    return Math.min(POLL_INTERVAL_MS * 2 ** steps, POLL_BACKOFF_MAX_MS);
   }
 
   private async poll(): Promise<void> {
-    // Skip if the previous poll is still running (e.g. a slow reconnect) so
-    // requests don't pile up on the single serialized connection.
-    if (this.polling) {
-      return;
-    }
-    this.polling = true;
     try {
       await this.rinnai.refresh();
       this.onPollSucceeded();
@@ -88,7 +115,7 @@ class RinnaiTouchApp extends Homey.App {
     } catch (error) {
       this.onPollFailed(error);
     } finally {
-      this.polling = false;
+      this.scheduleNextPoll();
     }
   }
 
@@ -110,17 +137,28 @@ class RinnaiTouchApp extends Homey.App {
   }
 
   private onPollFailed(error: unknown): void {
+    this.pollFailures += 1;
+
+    // Only the failures that are still telling us something get the stack. Once
+    // the devices are marked unavailable the cause has been reported and every
+    // subsequent poll fails identically, so keep it to one line.
+    if (this.devicesUnavailable) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.log(`[poll] still unreachable (${this.pollFailures} failures): ${message}`);
+      return;
+    }
+
     this.error('Poll failed', error);
 
-    this.pollFailures += 1;
-    if (this.devicesUnavailable || this.pollFailures < POLL_FAILURES_BEFORE_UNAVAILABLE) {
+    if (this.pollFailures < POLL_FAILURES_BEFORE_UNAVAILABLE) {
       return;
     }
 
     // Without this the devices keep serving their last known values as if live,
     // indefinitely - the app only ever marked them unavailable at boot.
     this.devicesUnavailable = true;
-    this.error(`No response from the module after ${this.pollFailures} polls, marking devices unavailable`);
+    this.error(`No response from the module after ${this.pollFailures} polls, marking devices unavailable`
+      + `, backing off to ${Math.round(POLL_BACKOFF_MAX_MS / 1000)}s between retries`);
     this.forEachDevice((device) => {
       device.setUnavailable(UNAVAILABLE_MESSAGE).catch((err) => this.error(err));
     });

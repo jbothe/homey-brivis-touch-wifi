@@ -49,7 +49,8 @@ class ZoneDriver extends Homey.Driver {
 
     this.homey.flow.getActionCard('rt_operating_mode_set')
       .registerRunListener(async (args: OperatingModeArgs) => {
-        await this.app.rinnai.setMode(args.rt_operating_mode);
+        await this.command(`set mode to ${args.rt_operating_mode}`,
+          () => this.app.rinnai.setMode(args.rt_operating_mode));
       });
 
     this.homey.flow.getConditionCard('rt_zone_active_is')
@@ -59,8 +60,23 @@ class ZoneDriver extends Homey.Driver {
 
     this.homey.flow.getActionCard('rt_fan_speed_set')
       .registerRunListener(async (args: FanSpeedArgs) => {
-        await this.app.rinnai.setFanSpeed(args.rt_fan_speed);
+        await this.command(`set fan speed to ${args.rt_fan_speed}`,
+          () => this.app.rinnai.setFanSpeed(args.rt_fan_speed));
       });
+  }
+
+  /**
+   * As ZoneDevice#command: the outermost handler on the command path, where a
+   * failure gets its single log line. Rethrown so the Flow itself is reported
+   * as failed rather than quietly continuing.
+   */
+  private async command(what: string, run: () => Promise<void>): Promise<void> {
+    try {
+      await run();
+    } catch (error) {
+      this.error(`Flow failed to ${what}`, error);
+      throw error;
+    }
   }
 
   async onPairListDevices() {

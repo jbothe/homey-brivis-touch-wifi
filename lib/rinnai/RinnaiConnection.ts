@@ -32,6 +32,18 @@ export interface RinnaiConnectionOptions {
    */
   closeConnectionDelay?: number;
 
+  /**
+   * Ceiling on a single connect attempt, in ms, covering UDP discovery, the TCP
+   * handshake and the module's first status frame. Left at RinnaiTouchTcp's
+   * default when unset.
+   *
+   * This is a backstop, not the primary detector - keep it above the socket
+   * idle timeout (5 sec), which catches a module that accepts the connection
+   * and then goes quiet. Setting it lower just makes that case report as a
+   * plain timeout instead.
+   */
+  connectTimeout?: number;
+
   debug?: boolean;
 }
 
@@ -82,6 +94,7 @@ export class RinnaiConnection {
       port: options.port,
       idleCloseDelay: options.idleCloseDelay ?? 5000,
       closeConnectionDelay: options.closeConnectionDelay ?? 1100,
+      connectTimeout: options.connectTimeout,
     };
 
     this.repository = new RinnaiTouchRepository(log, settings);

@@ -37,7 +37,8 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
     // +/- arrows ignore it and always step by 0.5. That's a platform bug,
     // not something fixable here: https://github.com/athombv/homey-apps-sdk-issues/issues/448
     this.registerCapabilityListener('target_temperature', async (value: number) => {
-      await this.app.rinnai.setTargetTemperature(value, this.zone);
+      await this.command(`set target temperature to ${value}`,
+        () => this.app.rinnai.setTargetTemperature(value, this.zone));
     });
 
     // Mode-aware on/off, mirroring how the physical wall controllers behave:
@@ -46,9 +47,11 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
     //   The sibling zone devices reflect the change via the app's fan-out.
     this.registerCapabilityListener('onoff', async (value: boolean) => {
       if (this.app.rinnai.mode === 'evap') {
-        await this.app.rinnai.setUserEnabled(value, this.zone);
+        await this.command(`turn zone ${value ? 'on' : 'off'}`,
+          () => this.app.rinnai.setUserEnabled(value, this.zone));
       } else {
-        await this.app.rinnai.setOn(value);
+        await this.command(`turn system ${value ? 'on' : 'off'}`,
+          () => this.app.rinnai.setOn(value));
       }
     });
 
@@ -58,15 +61,16 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
     // onto every zone device (like every physical controller carries these
     // buttons); setting one propagates to the others via syncFromService().
     this.registerCapabilityListener('rt_operating_mode', async (value: RinnaiMode) => {
-      await this.app.rinnai.setMode(value);
+      await this.command(`set mode to ${value}`, () => this.app.rinnai.setMode(value));
     });
 
     this.registerCapabilityListener('onoff.fan', async (value: boolean) => {
-      await this.app.rinnai.setFanState(value);
+      await this.command(`turn fan ${value ? 'on' : 'off'}`,
+        () => this.app.rinnai.setFanState(value));
     });
 
     this.registerCapabilityListener('rt_fan_speed', async (value: number) => {
-      await this.app.rinnai.setFanSpeed(value);
+      await this.command(`set fan speed to ${value}`, () => this.app.rinnai.setFanSpeed(value));
     });
 
     this.ensurePumpListener();
@@ -144,6 +148,24 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
   }
 
   /**
+   * Runs a capability write, logging the failure exactly once. This is the
+   * outermost handler on the command path - the service and repository below it
+   * propagate rather than log, so without this a rejected command leaves nothing
+   * in the app log at all.
+   *
+   * The rethrow is load-bearing: it is what makes Homey revert the optimistic
+   * value instead of leaving a setpoint on screen the unit never accepted.
+   */
+  private async command(what: string, run: () => Promise<void>): Promise<void> {
+    try {
+      await run();
+    } catch (error) {
+      this.error(`Failed to ${what}`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Adds/removes the pump capability to match `shouldShow`. Fire-and-forget
    * (syncFromService is synchronous and runs often), with a pending guard so
    * overlapping syncs don't attempt concurrent add/remove calls on the same
@@ -178,7 +200,8 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
       return;
     }
     this.registerCapabilityListener('onoff.pump', async (value: boolean) => {
-      await this.app.rinnai.setPumpState(value);
+      await this.command(`turn pump ${value ? 'on' : 'off'}`,
+        () => this.app.rinnai.setPumpState(value));
     });
     this.pumpListenerRegistered = true;
   }
