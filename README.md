@@ -21,18 +21,33 @@ Each zone also exposes a read-only **"Actively heating/cooling"** status, separa
 switch — whether the zone is actually calling for heat/cool right now, as opposed to whether the
 system is switched on.
 
-The zone device's on/off is mode-aware, matching the hardware: in evaporative mode it switches that
-zone's cooler independently (each zone has its own), while in heating/cooling it switches the whole
-system on or off (and the sibling zones reflect it, including the toggle's label, which reads
-"Zone Power" or "System Power" accordingly).
+The zone device's on/off is mode-aware, matching the hardware: in evaporative mode on a
+multi-setpoint system it switches that zone's cooler independently (each zone has its own), while
+everywhere else it switches the whole system on or off (and the sibling zones reflect it, including
+the toggle's label, which reads "Zone Power" or "System Power" accordingly).
+
+In heating/cooling, on/off and the circulation fan are two views of a single tri-state control in
+the unit — it is either heating/cooling, running the fan alone, or off — so they read as a pair:
+
+| On/off | Fan | Unit |
+| --- | --- | --- |
+| on | off | heating/cooling |
+| on | on | fan only |
+| off | — | off |
+
+Turning the fan **on** therefore switches the unit from heating to fan-only, and turning it **off**
+returns it to heating rather than shutting it down. (Evaporative mode has genuinely independent
+controls and behaves as you would expect.)
 
 All zone devices share a single connection to the module (owned by the app, in `app.ts`), since the
 module only accepts one TCP connection at a time.
 
 ## Keeping in sync
 
-The module only streams status while a connection is open, and the connection is closed again after
-a few seconds of idle to leave room for other clients (e.g. the official phone app). To pick up
+The module only streams status while a connection is open, and it accepts one client at a time, so
+the app closes the connection 1.5s after the request queue drains to leave room for other clients
+(e.g. the official phone app). That keeps it off the module ~80% of the time; holding it longer is
+what makes the phone app report the unit as busy. To pick up
 changes made outside Homey — at a wall controller, or the phone app — `app.ts` polls every 15s to
 refresh state, logging a one-line snapshot of the full state (mode, on/off, fan, pump, and every
 per-zone field) on each successful poll.
@@ -72,8 +87,9 @@ plus manual workflows to bump the app version and publish.
 - `lib/rinnai/` — vendored protocol core (TCP/UDP discovery, status parsing, command protocol)
   plus `RinnaiConnection.ts`, the typed wrapper the rest of the app talks to.
 - `drivers/zone/` — the Homey driver/device implementation.
-- `test/` — unit tests for the vendored protocol core's path-resolution logic (the highest-risk
-  reverse-engineered piece).
+- `test/` — unit tests for the reverse-engineered protocol core: path resolution, status parsing and
+  command encoding, TCP framing and connection failure paths, and the command round-trip against a
+  fake module that speaks the protocol.
 - `.homeycompose/` — source of truth for `app.json` (generated — do not edit `app.json` directly).
 
 ## Status

@@ -1,12 +1,6 @@
 {
   "extends": "athom/homey-app",
-  "ignorePatterns": [
-    "lib/rinnai/RinnaiTouchUdp.js",
-    "lib/rinnai/RinnaiTouchTcp.js",
-    "lib/rinnai/RinnaiTouchRepository.js",
-    "lib/rinnai/StateService.js",
-    "lib/rinnai/RinnaiTouchService.js"
-  ],
+  "ignorePatterns": [],
   "settings": {
     "import/resolver": {
       "node": {
@@ -20,6 +14,42 @@
     "node/no-missing-import": ["error", { "allowModules": ["homey"], "tryExtensions": [".js", ".json", ".node", ".ts"] }]
   },
   "overrides": [
+    {
+      "files": [
+        "lib/rinnai/RinnaiTouchUdp.js",
+        "lib/rinnai/RinnaiTouchTcp.js",
+        "lib/rinnai/RinnaiTouchRepository.js",
+        "lib/rinnai/StateService.js",
+        "lib/rinnai/RinnaiTouchService.js"
+      ],
+      "rules": {
+        "indent": "off",
+        "keyword-spacing": "off",
+        "object-curly-spacing": "off",
+        "no-trailing-spaces": "off",
+        "comma-spacing": "off",
+        "comma-dangle": "off",
+        "brace-style": "off",
+        "eol-last": "off",
+        "semi": "off",
+        "quotes": "off",
+        "prefer-const": "off",
+        "no-var": "off",
+        "object-shorthand": "off",
+        "lines-between-class-members": "off",
+        "strict": "off",
+        "import/order": "off",
+        "no-plusplus": "off",
+        "no-mixed-operators": "off",
+        "no-tabs": "off",
+        "no-multi-spaces": "off",
+        "key-spacing": "off",
+        "no-multiple-empty-lines": "off",
+        "consistent-return": "off",
+        "@typescript-eslint/no-this-alias": "off",
+        "homey-app/global-timers": "off"
+      }
+    },
     {
       "files": ["test/**/*.ts"],
       "rules": {

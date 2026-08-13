@@ -160,3 +160,49 @@ test('a failed command is reported once, not once per layer', async () => {
   const reads = lines.filter((line) => line.includes('Status read failed'));
   assert.equal(reads.length, 1);
 });
+
+test('refresh() reports a module that has stopped answering', async () => {
+  // The service swallows its own read errors, so a poll that quietly failed and
+  // one where nothing changed look identical from below. refresh() tells them
+  // apart by checking a frame actually arrived - without which a module offline
+  // for hours keeps serving its last values as if live.
+  const module_ = await startFakeModule();
+  const rinnai = connect(module_.port);
+
+  try {
+    await rinnai.init();
+    await rinnai.refresh();
+
+    await module_.close();
+    // The repository serves a status less than a second old straight from
+    // cache, which would answer the next refresh without ever touching the
+    // socket. Wait that window out so the read is a real one.
+    await new Promise((resolve) => setTimeout(resolve, 1200));
+
+    await assert.rejects(() => rinnai.refresh(), /No status received/);
+  } finally {
+    await rinnai.close();
+    await module_.close();
+  }
+});
+
+test('repeated init() leaves the zone list and the connection intact', async () => {
+  // Both app.onInit() and the pairing flow call init(), so it has to be safe to
+  // call more than once - it must not re-register the status listener or append
+  // to the controller list a second time.
+  const module_ = await startFakeModule();
+  const rinnai = connect(module_.port);
+
+  try {
+    await rinnai.init();
+    await rinnai.init();
+    await rinnai.init();
+
+    assert.deepEqual(rinnai.controllers, ['A', 'B']);
+    await rinnai.refresh();
+    assert.equal(rinnai.getTargetTemperature('A'), 21);
+  } finally {
+    await rinnai.close();
+    await module_.close();
+  }
+});

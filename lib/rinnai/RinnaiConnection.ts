@@ -22,6 +22,18 @@ export interface RinnaiConnectionOptions {
    *
    * Was named `connectionTimeout`, which it never was: connect attempts are
    * bounded inside RinnaiTouchTcp, and this value has no bearing on them.
+   *
+   * Upstream's 5000 came from a HomeKit plugin, where user interactions arrive
+   * in bursts and holding the socket open saves a reconnect between them. This
+   * app mostly polls on a 15 sec timer, so almost all of that window was spent
+   * idle - measured at a 39% duty cycle on the module's single connection slot,
+   * i.e. locked out roughly two seconds in every five, around the clock.
+   *
+   * 1500 halves that to ~18% at no cost. It cannot go much lower: a command
+   * issues a read and then a write as two queued requests, and the queue drains
+   * between them. Anything under `closeConnectionDelay` (1100) lets the close
+   * land in that gap, so the command reconnects mid-flight - measured at 1.7 sec
+   * per command against 100 ms here.
    */
   idleCloseDelay?: number;
 
@@ -92,7 +104,7 @@ export class RinnaiConnection {
     const settings = {
       address: options.address,
       port: options.port,
-      idleCloseDelay: options.idleCloseDelay ?? 5000,
+      idleCloseDelay: options.idleCloseDelay ?? 1500,
       closeConnectionDelay: options.closeConnectionDelay ?? 1100,
       connectTimeout: options.connectTimeout,
     };
@@ -175,11 +187,17 @@ export class RinnaiConnection {
   }
 
   /**
-   * The system-wide on/off state (protocol path `{mode}.OOP.ST`). This is
-   * distinct from getSystemActive()/getAutoEnabled(), which report whether
-   * the unit is *currently* actively heating/cooling rather than whether
-   * the user has switched it on. For multi-setpoint installations this is
-   * the only real on/off control - see setUserEnabled() below.
+   * Whether the unit is running at all - heating/cooling *or* fan-only. In
+   * heat/cool this and getFanState() read the same tri-state protocol field
+   * (`{mode}.OOP.ST`: `N` heat/cool, `Z` fan only, `F` off), so together they
+   * describe it without overlapping:
+   *
+   *   isOn && !fan -> heating/cooling      isOn && fan -> fan only
+   *   !isOn        -> off
+   *
+   * Distinct again from getSystemActive()/getAutoEnabled(), which report
+   * whether the unit is *actively* heating/cooling at this moment rather than
+   * what it has been switched to.
    */
   get isOn(): boolean {
     return this.service.getState();
@@ -244,8 +262,14 @@ export class RinnaiConnection {
     await this.service.setMode(STRING_TO_MODE[mode]);
   }
 
+  /**
+   * Rounded rather than truncated: the capability declares a step of 1, but the
+   * Homey dashboard widget's +/- arrows step by 0.5 regardless (see
+   * drivers/zone/device.ts). The service parseInt()s what it is given, so 20.5
+   * truncated back to 20 and every second press of "+" appeared to do nothing.
+   */
   async setTargetTemperature(value: number, zone: RinnaiZone = 'U'): Promise<void> {
-    await this.service.setTargetTemperature(value, zone);
+    await this.service.setTargetTemperature(Math.round(value), zone);
   }
 
   async setOn(value: boolean): Promise<void> {

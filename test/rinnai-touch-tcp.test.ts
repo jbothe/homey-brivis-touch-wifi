@@ -3,6 +3,7 @@
 import test from 'node:test';
 import assert from 'node:assert';
 import net from 'node:net';
+import type { EventEmitter } from 'node:events';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const RinnaiTouchTcp = require('../lib/rinnai/RinnaiTouchTcp');
 
@@ -21,6 +22,20 @@ function makeLogger() {
 // A frame as the module sends it: 'N', a six digit sequence number, then the
 // status JSON. RinnaiTouchTcp keys off the leading 'N' and the '[' offset.
 const STATUS_FRAME = 'N000001[{"SYST":{"CFG":{"MTSP":"Y"}}}]';
+
+/** Collects frames until `count` have arrived, then resolves. */
+function collect(tcp: EventEmitter, count: number) {
+  const frames: string[] = [];
+  const done = new Promise<string[]>((resolve) => {
+    tcp.on('data', (frame: string) => {
+      frames.push(frame);
+      if (frames.length === count) {
+        resolve(frames);
+      }
+    });
+  });
+  return { frames, done };
+}
 
 /** A stand-in module. `onConnection` decides how it behaves once connected. */
 async function startFakeModule(onConnection: (socket: net.Socket) => void) {
@@ -155,6 +170,108 @@ test('an unsolicited close is reported upwards and leaves no socket to write int
       () => tcp.write(STATUS_FRAME),
       /No open connection/,
     );
+  } finally {
+    tcp.destroy();
+    await module_.close();
+  }
+});
+
+// TCP is a byte stream: the module's status payload for a multi-zone system
+// runs past one segment, so frames arrive split, and while it streams they also
+// arrive coalesced. Reading a chunk as exactly one frame meant a split frame was
+// passed on truncated - and JSON.parse on it threw out of a synchronous socket
+// callback, taking the app down.
+
+test('a frame split across segments is reassembled, not truncated', async () => {
+  const head = STATUS_FRAME.slice(0, 20);
+  const tail = STATUS_FRAME.slice(20);
+
+  const module_ = await startFakeModule((socket) => {
+    socket.write(head);
+    // Far enough apart to guarantee separate 'data' events.
+    setTimeout(() => socket.write(tail), 30);
+  });
+  const tcp = new RinnaiTouchTcp(makeLogger(), module_.address, 5000, 2000);
+  const received = collect(tcp, 1);
+
+  try {
+    await tcp.connect();
+    assert.deepEqual(await received.done, [STATUS_FRAME]);
+  } finally {
+    tcp.destroy();
+    await module_.close();
+  }
+});
+
+test('a chunk carrying several frames emits every one of them', async () => {
+  const second = 'N000002[{"SYST":{"CFG":{"MTSP":"N"}}}]';
+  const third = 'N000003[{"SYST":{"CFG":{"MTSP":"Y"}}}]';
+
+  const module_ = await startFakeModule((socket) => {
+    socket.write(STATUS_FRAME + second + third);
+  });
+  const tcp = new RinnaiTouchTcp(makeLogger(), module_.address, 5000, 2000);
+  const received = collect(tcp, 3);
+
+  try {
+    await tcp.connect();
+    assert.deepEqual(await received.done, [STATUS_FRAME, second, third]);
+  } finally {
+    tcp.destroy();
+    await module_.close();
+  }
+});
+
+test('a payload containing brackets in a string is framed on depth, not the last bracket', async () => {
+  // Zone names are free text, so ']' inside a string is legitimate. Depth
+  // counting has to ignore it - and ignore an escaped quote that would
+  // otherwise end the string early.
+  const awkward = 'N000004[{"SYST":{"CFG":{"ZA":"Kids] \\" [room"}}}]';
+
+  const module_ = await startFakeModule((socket) => socket.write(awkward));
+  const tcp = new RinnaiTouchTcp(makeLogger(), module_.address, 5000, 2000);
+  const received = collect(tcp, 1);
+
+  try {
+    await tcp.connect();
+    const [frame] = await received.done;
+    assert.equal(frame, awkward);
+    // The whole point: the repository can parse what it is handed.
+    assert.equal(JSON.parse(frame.substr(7))[0].SYST.CFG.ZA, 'Kids] " [room');
+  } finally {
+    tcp.destroy();
+    await module_.close();
+  }
+});
+
+test('leading garbage is skipped rather than framed', async () => {
+  // Reconnecting mid-stream can leave the tail of a frame whose start we never
+  // saw. It has to be dropped, and the next real frame still recognised.
+  const module_ = await startFakeModule((socket) => {
+    socket.write(`}}}]${STATUS_FRAME}`);
+  });
+  const tcp = new RinnaiTouchTcp(makeLogger(), module_.address, 5000, 2000);
+  const received = collect(tcp, 1);
+
+  try {
+    await tcp.connect();
+    assert.deepEqual(await received.done, [STATUS_FRAME]);
+  } finally {
+    tcp.destroy();
+    await module_.close();
+  }
+});
+
+test('a partial frame alone does not settle the connect', async () => {
+  // connect() resolves on the first *complete* frame. Resolving on a partial
+  // one would hand the repository a connection it cannot read a status from.
+  const module_ = await startFakeModule((socket) => {
+    socket.write(STATUS_FRAME.slice(0, 20));
+  });
+  const tcp = new RinnaiTouchTcp(makeLogger(), module_.address, 5000, 300, 5000);
+
+  try {
+    await assert.rejects(() => tcp.connect(), /Timed out connecting/);
   } finally {
     tcp.destroy();
     await module_.close();

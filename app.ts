@@ -17,6 +17,9 @@ const POLL_FAILURES_BEFORE_UNAVAILABLE = 3;
 // nothing to poll for, so this is purely how quickly we notice it coming back.
 const POLL_BACKOFF_MAX_MS = 300000;
 const UNAVAILABLE_MESSAGE = 'Lost connection to the Brivis Touch module';
+// Repeat the state line this often even when nothing has changed, so a quiet
+// log still shows the app polling and what it last saw. 20 polls is ~5 min.
+const POLLS_PER_STATE_HEARTBEAT = 20;
 
 export interface RinnaiSyncableDevice {
   syncFromService(): void;
@@ -33,6 +36,10 @@ class RinnaiTouchApp extends Homey.App {
   private devicesUnavailable = false;
 
   private stopped = false;
+
+  private lastStateLine?: string;
+
+  private pollsSinceStateLog = 0;
 
   async onInit() {
     // No address override for v1 - the module is always found via UDP
@@ -119,20 +126,30 @@ class RinnaiTouchApp extends Homey.App {
     }
   }
 
+  /**
+   * The poll loop is the only thing that marks devices available or
+   * unavailable. syncFromService() used to call setAvailable() on every sync,
+   * which could clear an unavailability this app still believed in - and since
+   * onPollFailed() skips devices it thinks are already unavailable, the flag
+   * could latch and stop them ever being marked unavailable again.
+   */
   private onPollSucceeded(): void {
     this.pollFailures = 0;
 
-    if (!this.devicesUnavailable) {
-      return;
+    if (this.devicesUnavailable) {
+      this.devicesUnavailable = false;
+      this.log('Reconnected to the Brivis Touch module');
     }
-    this.devicesUnavailable = false;
-    this.log('Reconnected to the Brivis Touch module');
 
-    // syncFromService() also marks devices available, but only runs when the
-    // status actually changed - and a module that comes back reporting exactly
-    // what it reported before would otherwise stay unavailable forever.
+    // Reconciled every poll rather than only on the unavailable -> available
+    // edge. A device that marked itself unavailable in onInit (paired, or the
+    // app restarted, while the module was unreachable) never set the app-level
+    // flag, so an edge-triggered recovery would leave it stuck. getAvailable()
+    // is local state, so this stays cheap.
     this.forEachDevice((device) => {
-      device.setAvailable().catch((err) => this.error(err));
+      if (!device.getAvailable()) {
+        device.setAvailable().catch((err) => this.error(err));
+      }
     });
   }
 
@@ -190,7 +207,19 @@ class RinnaiTouchApp extends Homey.App {
 
     const pump = rinnai.hasEvaporative ? ` pump=${rinnai.getPumpState()}` : '';
 
-    this.log(`[poll] mode=${rinnai.mode} on=${rinnai.isOn} fan=${rinnai.getFanState()} fanSpeed=${rinnai.getFanSpeed()}${pump} || ${zones}`);
+    const line = `mode=${rinnai.mode} on=${rinnai.isOn} fan=${rinnai.getFanState()} fanSpeed=${rinnai.getFanSpeed()}${pump} || ${zones}`;
+
+    // A heating system spends most of the day in one state, so logging this
+    // every poll was ~5.7k identical lines a day crowding out everything worth
+    // reading. Log it when it changes, plus a periodic repeat so the log still
+    // shows the app is alive and what it currently sees.
+    this.pollsSinceStateLog += 1;
+    if (line === this.lastStateLine && this.pollsSinceStateLog < POLLS_PER_STATE_HEARTBEAT) {
+      return;
+    }
+    this.lastStateLine = line;
+    this.pollsSinceStateLog = 0;
+    this.log(`[poll] ${line}`);
   }
 
   private syncDevices(): void {

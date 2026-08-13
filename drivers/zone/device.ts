@@ -4,6 +4,10 @@ import Homey from 'homey';
 import type { RinnaiTouchApp, RinnaiSyncableDevice } from '../../app';
 import type { RinnaiMode, RinnaiZone } from '../../lib/rinnai/RinnaiConnection';
 
+// Must match the rt_fan_speed capability definition (.homeycompose/capabilities).
+const FAN_SPEED_MIN = 1;
+const FAN_SPEED_MAX = 16;
+
 class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
 
   private get app(): RinnaiTouchApp {
@@ -42,11 +46,12 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
     });
 
     // Mode-aware on/off, mirroring how the physical wall controllers behave:
-    // - in evap, each zone has its own cooler, so this toggles that zone only.
-    // - in heat/cool, power is unit-wide, so this switches the whole system.
-    //   The sibling zone devices reflect the change via the app's fan-out.
+    // - in evap on a multi-setpoint system, each zone has its own cooler, so
+    //   this toggles that zone only.
+    // - otherwise power is unit-wide, so this switches the whole system. The
+    //   sibling zone devices reflect the change via the app's fan-out.
     this.registerCapabilityListener('onoff', async (value: boolean) => {
-      if (this.app.rinnai.mode === 'evap') {
+      if (this.usesZoneSwitch) {
         await this.command(`turn zone ${value ? 'on' : 'off'}`,
           () => this.app.rinnai.setUserEnabled(value, this.zone));
       } else {
@@ -64,6 +69,11 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
       await this.command(`set mode to ${value}`, () => this.app.rinnai.setMode(value));
     });
 
+    // In heat/cool this and `onoff` are two views of one tri-state protocol
+    // field, so they read as a pair rather than independently: on + fan off is
+    // heating, on + fan on is fan-only, off is off. Turning the fan off
+    // therefore returns the unit to heating rather than shutting it down - see
+    // RinnaiConnection#isOn.
     this.registerCapabilityListener('onoff.fan', async (value: boolean) => {
       await this.command(`turn fan ${value ? 'on' : 'off'}`,
         () => this.app.rinnai.setFanState(value));
@@ -86,9 +96,19 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
     }
   }
 
-  syncFromService(): void {
-    this.setAvailable().catch(() => undefined);
+  /**
+   * Whether `onoff` controls this zone alone rather than the whole unit. Only
+   * multi-setpoint evap gives each zone its own cooler; everywhere else - and
+   * on a single-setpoint system in any mode - power is unit-wide. Without the
+   * multi-setpoint test this resolved the zone switch to `ECOM.GSO.ZUUE`, a
+   * path that does not exist, so the toggle did nothing at all.
+   */
+  private get usesZoneSwitch(): boolean {
+    const { rinnai } = this.app;
+    return rinnai.mode === 'evap' && rinnai.hasMultiSetPoint;
+  }
 
+  syncFromService(): void {
     const { rinnai } = this.app;
     const { zone } = this;
 
@@ -97,7 +117,11 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
       this.setCapabilityValue('measure_temperature', currentTemp).catch((err) => this.error(err));
     }
 
-    const zoneActive = rinnai.getAutoEnabled(zone);
+    // getSystemActive() rather than getAutoEnabled(): they are the same thing
+    // on multi-setpoint hardware, but on a single-setpoint system AutoEnabled
+    // resolves to a per-zone path that does not exist there, so this capability
+    // sat permanently false. getSystemActive() falls back to the unit-wide flag.
+    const zoneActive = rinnai.getSystemActive(zone);
     this.setCapabilityValue('rt_zone_active', zoneActive).catch((err) => this.error(err));
     if (this.lastZoneActive !== undefined && this.lastZoneActive !== zoneActive) {
       this.homey.flow.getDeviceTriggerCard('rt_zone_active_changed')
@@ -111,14 +135,15 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
       this.setCapabilityValue('target_temperature', targetTemp).catch((err) => this.error(err));
     }
 
-    // Mirror the mode-aware write above: in evap report this zone's own state,
-    // otherwise report the unit-wide on/off. The title follows suit so the
-    // toggle never claims to be system-wide when it's actually per-zone.
+    // Mirror the mode-aware write above: report this zone's own state where the
+    // toggle controls the zone, the unit-wide on/off otherwise. The title
+    // follows suit so it never claims to be system-wide when it's per-zone.
     const isEvap = rinnai.mode === 'evap';
-    const on = isEvap ? rinnai.getUserEnabled(zone) : rinnai.isOn;
+    const perZone = this.usesZoneSwitch;
+    const on = perZone ? rinnai.getUserEnabled(zone) : rinnai.isOn;
     this.setCapabilityValue('onoff', on).catch((err) => this.error(err));
 
-    const onoffTitle = isEvap ? 'Zone Power' : 'System Power';
+    const onoffTitle = perZone ? 'Zone Power' : 'System Power';
     if (this.lastOnoffTitle !== onoffTitle) {
       this.lastOnoffTitle = onoffTitle;
       this.setCapabilityOptions('onoff', { title: { en: onoffTitle } }).catch((err) => this.error(err));
@@ -136,8 +161,11 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
 
     this.setCapabilityValue('onoff.fan', rinnai.getFanState()).catch((err) => this.error(err));
 
+    // Range-checked, not just NaN-checked: the capability declares 1-16, and
+    // the module reports 0 with the fan stopped. Writing an out-of-range value
+    // makes Homey reject the whole set.
     const fanSpeed = rinnai.getFanSpeed();
-    if (!Number.isNaN(fanSpeed)) {
+    if (Number.isFinite(fanSpeed) && fanSpeed >= FAN_SPEED_MIN && fanSpeed <= FAN_SPEED_MAX) {
       this.setCapabilityValue('rt_fan_speed', fanSpeed).catch((err) => this.error(err));
     }
 
