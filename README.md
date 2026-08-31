@@ -1,162 +1,147 @@
 # Brivis
 
-A [Homey](https://homey.app) app for controlling a Brivis ducted gas heating / evaporative cooling
-system via the [**Brivis Touch Wi-Fi**](https://www.brivis.com.au/online/heating/gas-ducted-heating/brivis-touch-wi-fi/)
-controller module — sold as the *Brivis Touch Wi-Fi Controller Module Kit*, and previously marketed
-as the **Rinnai Touch** Wi-Fi module (same hardware, same protocol).
+A [Homey](https://homey.app) app for Brivis ducted gas heating and evaporative cooling, controlled
+over the LAN via the
+[Brivis Touch Wi-Fi](https://www.brivis.com.au/online/heating/gas-ducted-heating/brivis-touch-wi-fi/)
+controller module. The same hardware was previously sold as the **Rinnai Touch** Wi-Fi module and
+speaks the same protocol.
 
-The app is named for the vendor (**Brivis**) and its single driver for the device
-(**Touch Wi-Fi Zone**), per the Homey App Store
-[guidelines](https://apps.developer.homey.app/app-store/guidelines) on app naming.
+The app is named for the vendor and its single driver for the device, per the App Store
+[guidelines](https://apps.developer.homey.app/app-store/guidelines) on naming.
 
-There's no public SDK for this module. The device/network protocol layer in this app is adapted
-from [homebridge-rinnai-touch-plugin](https://github.com/mantorok1/homebridge-rinnai-touch-plugin)
-(MIT licensed) — see [`lib/rinnai/NOTICE.md`](lib/rinnai/NOTICE.md) for attribution details.
+There is no public SDK. The protocol layer is adapted from
+[homebridge-rinnai-touch-plugin](https://github.com/mantorok1/homebridge-rinnai-touch-plugin)
+(MIT). See [`lib/rinnai/NOTICE.md`](lib/rinnai/NOTICE.md) for attribution and the list of local
+changes.
 
 ## Devices
 
-- **Touch Wi-Fi Zone** — one device per zone controller (e.g. Upstairs, Downstairs), modelled on
-  the physical wall controllers, which are peers: each exposes the zone's target/measured
-  temperature plus the unit-wide controls (operating mode, circulation fan, fan speed, and — on
-  evaporative systems, while the system is actually in evap mode — the pump). Changing a unit-wide
-  control on one zone propagates to the others, just as it does between the physical controllers.
-  Pairing discovers the module on the LAN via UDP broadcast and lists the installed zones.
+**Touch Wi-Fi Zone**, one device per zone controller, modelled on the physical wall controllers,
+which are peers. Each exposes its own target and measured temperature plus the unit-wide controls
+(operating mode, circulation fan, fan speed, and the pump on evaporative systems). Changing a
+unit-wide control on one zone propagates to the others, exactly as it does between the wall
+controllers. Pairing discovers the module by UDP broadcast and lists the installed zones.
 
-Each zone also exposes a read-only **"Actively heating/cooling"** status, separate from the on/off
-switch — whether the zone is actually calling for heat/cool right now, as opposed to whether the
-system is switched on.
+Four read-only statuses report what the system and wall controller are doing. Homey reflects them
+but never writes them, even where the protocol would allow it:
 
-Alongside it are three more read-only statuses, which mirror what the wall controller is set to
-rather than letting Homey change it:
-
-- **Control mode** — whether the zone is following its schedule or a manual setpoint.
-- **Schedule override** — None, Advance, or Operation, so an Advance pressed at a wall controller
-  is visible in Homey.
-- **Schedule period** — which block of the zone's schedule is current (Wake, Leave, Return,
-  Pre-sleep, Sleep). Heat/cool only; the module reports no equivalent in evap mode, where it reads
-  as unknown.
+| Status | Meaning |
+| --- | --- |
+| Actively heating/cooling | Whether the zone is calling for heat/cool now, as opposed to being switched on |
+| Control mode | Following the schedule, or a manual setpoint |
+| Schedule override | None, Advance or Operation, so an Advance pressed at a wall controller is visible |
+| Schedule period | Wake, Leave, Return, Pre-sleep or Sleep. Heat/cool only; unknown in evap mode |
 
 "Actively heating/cooling" prefers the per-zone field on multi-setpoint hardware and falls back to
-the unit-wide flag otherwise, since the per-zone path does not exist on single-setpoint systems.
+the unit-wide flag otherwise, because the per-zone path does not exist on single-setpoint systems.
 
-The zone device's on/off is mode-aware, matching the hardware: in evaporative mode on a
-multi-setpoint system it switches that zone's cooler independently (each zone has its own), while
-everywhere else it switches the whole system on or off (and the sibling zones reflect it, including
-the toggle's label, which reads "Zone Power" or "System Power" accordingly).
+### On/off is mode-aware
 
-In heating/cooling, on/off and the circulation fan are two views of a single tri-state control in
-the unit — it is either heating/cooling, running the fan alone, or off — so they read as a pair:
+In evaporative mode on a multi-setpoint system each zone has its own cooler, so the toggle switches
+that zone alone. Everywhere else it switches the whole system, and the sibling zones follow. The
+label tracks this, reading "Zone Power" or "System Power" accordingly.
+
+In heating/cooling, on/off and the circulation fan are two views of one tri-state field in the unit,
+so they behave as a pair:
 
 | On/off | Fan | Unit |
 | --- | --- | --- |
 | on | off | heating/cooling |
 | on | on | fan only |
-| off | — | off |
+| off | any | off |
 
 Turning the fan **on** therefore switches the unit from heating to fan-only, and turning it **off**
-returns it to heating rather than shutting it down. (Evaporative mode has genuinely independent
-controls and behaves as you would expect.)
-
-All zone devices share a single connection to the module (owned by the app, in `app.ts`), since the
-module only accepts one TCP connection at a time.
+returns it to heating rather than shutting it down. Evaporative mode has genuinely independent
+controls and behaves as expected.
 
 ## Keeping in sync
 
-The module only streams status while a connection is open, and it accepts one client at a time, so
-the app closes the connection 1.5s after the request queue drains to leave room for other clients
-(e.g. the official phone app). That keeps it off the module ~80% of the time; holding it longer is
-what makes the phone app report the unit as busy. To pick up
-changes made outside Homey — at a wall controller, or the phone app — `app.ts` polls every 15s to
-refresh state, logging a one-line snapshot of the full state (mode, on/off, fan, pump, and every
-per-zone field) on each successful poll.
+The module accepts one TCP client at a time and only streams status while connected, so all zone
+devices share a single connection owned by `app.ts`. It closes 1.5s after the request queue drains,
+which leaves the module free roughly 80% of the time. Holding it longer is what makes the official
+phone app report the unit as busy.
 
-While the system is switched off the module stops reporting the per-zone *operation* blocks
-(`{mode}.Z{zone}O`), which is where the target temperature, control mode and schedule override live.
-Setpoints still apply — writing one with the system off and then switching it on brings the new
-value back — but the module cannot echo them until it is on again, so the app sends those commands
-once and logs them as unconfirmed rather than retrying or reporting a failure.
+`app.ts` polls every 15s to catch changes made at a wall controller or in the phone app, logging a
+one-line snapshot of the full state on each poll.
 
-After three consecutive failed polls (~45s) the zone devices are marked unavailable rather than
-continuing to serve their last known values, and become available again on the next successful poll.
-A command the module never acknowledges (three attempts) fails the capability, so Homey reverts the
-value instead of showing a setpoint the unit never took.
+Two failure modes are handled deliberately:
+
+- While the system is off, the module stops reporting the per-zone operation blocks
+  (`{mode}.Z{zone}O`) that hold the target temperature, control mode and schedule override.
+  Setpoints still apply, but cannot be echoed back until the system is on, so those commands are
+  sent once and logged as unconfirmed instead of being retried or failed.
+- After three consecutive failed polls (~45s) the devices are marked unavailable rather than serving
+  stale values, recovering on the next successful poll. A command the module never acknowledges
+  (three attempts) fails the capability, so Homey reverts rather than showing a setpoint the unit
+  never took.
 
 ## Flow cards
 
-- **Operating mode** — trigger (changed to), condition (is/is not), action (set to), for
-  heat/cool/evap.
-- **Actively heating/cooling** — trigger (changed), condition (is/is not). Read-only, so no action.
-- **Fan speed** — action (set to 1–16).
+| Card | Trigger | Condition | Action |
+| --- | --- | --- | --- |
+| Operating mode | changed to | is / is not | set to |
+| Actively heating/cooling | changed | is / is not | n/a, read-only |
+| Fan speed | | | set to 1 to 16 |
 
-On/off, target temperature and measured temperature are standard Homey capabilities, so their
-triggers/conditions/actions (turn on/off, toggle, temperature changed, set temperature, etc.) are
-provided automatically by Homey — no app code needed for those.
+On/off and the temperatures are standard Homey capabilities, so Homey provides their cards
+automatically. The three schedule and control-mode statuses have no cards yet.
 
 ## Development
 
 ```sh
 npm install
-npm run build             # tsc typecheck
+npm run build              # tsc typecheck
 npm run lint
-npm test                  # runs test/*.test.ts via node's built-in test runner
-homey app validate --level debug
-homey app run              # run against a real Homey on the same LAN as the module
+npm test                   # test/*.test.ts via node's built-in runner
+homey app validate --level verified
+homey app run              # against a real Homey on the module's LAN
 ```
 
-CI (`.github/workflows/`) runs lint, test and `homey app validate --level verified` on every push,
-plus manual workflows to bump the app version and publish.
+CI runs lint, tests and `homey app validate --level verified` on every push, plus manual workflows
+to bump the version and publish. The validate and publish workflows install dependencies first:
+`tsconfig.json` extends a package, so without `node_modules` the Athom actions fail with an
+unhelpful "Tsconfig validation failed".
 
 ## Project layout
 
-- `lib/rinnai/` — vendored protocol core (TCP/UDP discovery, status parsing, command protocol)
-  plus `RinnaiConnection.ts`, the typed wrapper the rest of the app talks to.
-- `drivers/zone/` — the Homey driver/device implementation.
-- `test/` — unit tests for the reverse-engineered protocol core: path resolution, status parsing and
-  command encoding, TCP framing and connection failure paths, and the command round-trip against a
-  fake module that speaks the protocol.
-- `.homeycompose/` — source of truth for `app.json` (generated — do not edit `app.json` directly).
-
-## Status
-
-Connects, discovers, and controls heat/cool/evap mode, per-zone temperature and on/off, fan, pump,
-and polls for out-of-band changes. Has a starter set of Flow cards (above). Not yet implemented:
-writing the schedule/advance/manual controls (they are exposed read-only, but nothing sets them),
-per-zone dampers in heat/cool, and a manual IP override (the module must be reachable via UDP
-broadcast discovery for now).
+- `lib/rinnai/` vendored protocol core (UDP discovery, TCP framing, status parsing, commands) plus
+  `RinnaiConnection.ts`, the typed wrapper everything else uses.
+- `drivers/zone/` the driver and device. `driver.ts` derives a paired device's capabilities from
+  the manifest, minus `onoff.pump`, which the device adds and removes from the live mode.
+- `test/` unit tests for the protocol core: path resolution, status parsing, command encoding, TCP
+  framing, failure paths, and a round trip against a fake module.
+- `.homeycompose/` source of truth for `app.json`. Never edit `app.json` directly; it is generated.
 
 ## App Store assets
 
-- `assets/icon.svg` — the Brivis wordmark, white on a 960x960 canvas. It is drawn white because
-  Homey paints `brandColor` (`#132A4D`, the Brivis navy) *behind* the icon; the vendor's own navy
-  would be invisible against it.
-- `drivers/zone/assets/icon.svg` — the fingerprint mark the official Brivis/Rinnai Touch phone
-  app uses as its own icon; it is the artwork owners of the system already recognise, and it
-  plays on the "Touch" name. Deliberately distinct from the app icon above, which the Homey
-  guidelines require (a driver must not re-use the app's icon).
-- `drivers/zone/assets/images/` — product shot of the module, on white, at 75/500/1000 px square.
-- `assets/images/` — app image at 250x175 and 500x350 (10:7). The optional 1000x700 XLarge is
-  not supplied, so the manifest declares only `small` and `large`; add both together if a
-  higher-resolution original turns up.
-
-Both images are Brivis' own marketing artwork for the Touch Wi-Fi controller, taken from the
-product page linked at the top. That is what the App Store guidelines ask for — brand imagery is
-explicitly encouraged over something invented (1.4.2) — and the app image is the same hero shot the
-vendor pairs with the tagline used as this app's description.
-- `assets/rt_*.svg` — one icon per custom capability, line art on the same 960x960 canvas as the
-  others, stroked in `currentColor` so they follow the surrounding UI.
-- `README.txt` — the App Store listing text (`homey app publish` requires this file, and refuses
-  to run without it), with `README.nl.txt`, `README.fr.txt` and `README.de.txt` alongside it. Plain
-  text only: no Markdown, no URLs, one to two paragraphs. Separate from this file, which is the
-  developer readme and is not shown in the store.
+- `assets/icon.svg` the Brivis wordmark, white on a 960x960 canvas. White because Homey paints
+  `brandColor` (`#132A4D`, the Brivis navy) behind the icon, where the vendor's navy would vanish.
+- `drivers/zone/assets/icon.svg` the fingerprint mark from the official Touch phone app. Owners
+  recognise it, and a driver may not reuse the app's icon.
+- `assets/rt_*.svg` one icon per custom capability, line art on the same canvas, stroked in
+  `currentColor` so it follows the surrounding UI.
+- `assets/images/` (250x175, 500x350) and `drivers/zone/assets/images/` (75/500/1000 square) are
+  Brivis' own marketing artwork for this product, which is what the guidelines ask for. The optional
+  1000x700 app XLarge is not supplied, so the manifest declares only `small` and `large`.
+- `README.txt` plus `README.nl.txt`, `README.fr.txt` and `README.de.txt` are the App Store listing
+  text. `homey app publish` refuses to run without `README.txt`. Plain text only: no Markdown, no
+  URLs, one or two paragraphs. This file is the developer readme and is not shown in the store.
 
 ## Translations
 
-English, Dutch, French and German, across the app description, driver, capabilities (titles, enum
-values and Insights titles) and every Flow card. The guidelines treat a partially translated app as
-worse than an English one (1.11), so a string is either translated everywhere or nowhere. Two
-deliberate exceptions: the app name, since `Brivis` is the brand, and `Touch Wi-Fi Zone`, which only
-reorders in French.
+English, Dutch, French and German across the description, driver, capabilities (titles, enum values,
+Insights titles) and every Flow card. A partially translated app is treated as worse than an English
+one, so a string is translated everywhere or nowhere. The app name is exempt, being the brand.
 
-The on/off title is the one translated string not in a manifest — it depends on the unit's current
-mode, so `ONOFF_TITLES` in `drivers/zone/device.ts` carries all four languages and must be kept in
-step with the rest.
+`ONOFF_TITLES` in `drivers/zone/device.ts` is the one translated string outside a manifest, because
+the on/off label depends on the current mode. Keep it in step when adding a language.
+
+## Status
+
+Connects, discovers and controls mode, per-zone temperature and on/off, fan and pump, and polls for
+out-of-band changes. Not implemented: writing the schedule, advance and manual controls (exposed
+read-only, nothing sets them), per-zone dampers in heat/cool, and a manual IP override, so the
+module must be reachable by UDP broadcast.
+
+The schedule period codes (`W`, `L`, `R`, `P`, `S`) are inferred from the protocol path table rather
+than observed. An unrecognised value is logged and left unset rather than guessed.
