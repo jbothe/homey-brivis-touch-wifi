@@ -137,6 +137,11 @@ broadcast discovery for now).
 - `assets/images/` — app image at 250x175 and 500x350 (10:7). The optional 1000x700 XLarge is
   not supplied, so the manifest declares only `small` and `large`; add both together if a
   higher-resolution original turns up.
+
+Both images are Brivis' own marketing artwork for the Touch Wi-Fi controller, taken from the
+product page linked at the top. That is what the App Store guidelines ask for — brand imagery is
+explicitly encouraged over something invented (1.4.2) — and the app image is the same hero shot the
+vendor pairs with the tagline used as this app's description.
 - `assets/rt_*.svg` — one icon per custom capability, line art on the same 960x960 canvas as the
   others, stroked in `currentColor` so they follow the surrounding UI.
 - `README.txt` — the App Store listing text (`homey app publish` requires this file, and refuses
