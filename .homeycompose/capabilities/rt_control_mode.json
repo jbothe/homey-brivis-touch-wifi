@@ -1,7 +1,10 @@
 {
   "type": "enum",
   "title": {
-    "en": "Control mode"
+    "en": "Control mode",
+    "nl": "Bedieningsmodus",
+    "fr": "Mode de commande",
+    "de": "Steuermodus"
   },
   "getable": true,
   "setable": false,
@@ -11,13 +14,19 @@
     {
       "id": "schedule",
       "title": {
-        "en": "Schedule"
+        "en": "Schedule",
+        "nl": "Schema",
+        "fr": "Programmation",
+        "de": "Zeitplan"
       }
     },
     {
       "id": "manual",
       "title": {
-        "en": "Manual"
+        "en": "Manual",
+        "nl": "Handmatig",
+        "fr": "Manuel",
+        "de": "Manuell"
       }
     }
   ]

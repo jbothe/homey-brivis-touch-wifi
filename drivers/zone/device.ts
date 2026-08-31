@@ -8,6 +8,19 @@ import type { RinnaiMode, RinnaiZone } from '../../lib/rinnai/RinnaiConnection';
 const FAN_SPEED_MIN = 1;
 const FAN_SPEED_MAX = 16;
 
+// Set at runtime rather than in driver.compose.json, because which one applies
+// depends on the mode the unit is in. Translated in step with the manifests: a
+// title left in English here would be the one untranslated string in an
+// otherwise translated app, which the App Store guidelines call out (1.11).
+const ONOFF_TITLES = {
+  zone: {
+    en: 'Zone Power', nl: 'Zone aan/uit', fr: 'Zone marche/arrêt', de: 'Zone Ein/Aus',
+  },
+  system: {
+    en: 'System Power', nl: 'Systeem aan/uit', fr: 'Système marche/arrêt', de: 'System Ein/Aus',
+  },
+};
+
 class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
 
   private get app(): RinnaiTouchApp {
@@ -149,10 +162,10 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
     const on = perZone ? rinnai.getUserEnabled(zone) : rinnai.isOn;
     this.setCapabilityValue('onoff', on).catch((err) => this.error(err));
 
-    const onoffTitle = perZone ? 'Zone Power' : 'System Power';
+    const onoffTitle = perZone ? 'zone' : 'system';
     if (this.lastOnoffTitle !== onoffTitle) {
       this.lastOnoffTitle = onoffTitle;
-      this.setCapabilityOptions('onoff', { title: { en: onoffTitle } }).catch((err) => this.error(err));
+      this.setCapabilityOptions('onoff', { title: ONOFF_TITLES[onoffTitle] }).catch((err) => this.error(err));
     }
 
     if (rinnai.mode !== undefined) {

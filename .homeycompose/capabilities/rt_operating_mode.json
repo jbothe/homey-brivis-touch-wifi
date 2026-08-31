@@ -1,7 +1,10 @@
 {
   "type": "enum",
   "title": {
-    "en": "Operating mode"
+    "en": "Operating mode",
+    "nl": "Bedrijfsmodus",
+    "fr": "Mode de fonctionnement",
+    "de": "Betriebsmodus"
   },
   "getable": true,
   "setable": true,
@@ -10,19 +13,28 @@
     {
       "id": "heat",
       "title": {
-        "en": "Heat"
+        "en": "Heat",
+        "nl": "Verwarmen",
+        "fr": "Chauffage",
+        "de": "Heizen"
       }
     },
     {
       "id": "cool",
       "title": {
-        "en": "Cool"
+        "en": "Cool",
+        "nl": "Koelen",
+        "fr": "Refroidissement",
+        "de": "Kühlen"
       }
     },
     {
       "id": "evap",
       "title": {
-        "en": "Evaporative"
+        "en": "Evaporative",
+        "nl": "Verdampingskoeling",
+        "fr": "Refroidissement évaporatif",
+        "de": "Verdunstungskühlung"
       }
     }
   ]

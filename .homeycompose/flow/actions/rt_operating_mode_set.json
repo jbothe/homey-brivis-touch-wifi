@@ -1,10 +1,16 @@
 {
   "id": "rt_operating_mode_set",
   "title": {
-    "en": "Set the operating mode to"
+    "en": "Set the operating mode to",
+    "nl": "Stel de bedrijfsmodus in op",
+    "fr": "Régler le mode de fonctionnement sur",
+    "de": "Betriebsmodus einstellen auf"
   },
   "titleFormatted": {
-    "en": "Set the operating mode to [[rt_operating_mode]]"
+    "en": "Set the operating mode to [[rt_operating_mode]]",
+    "nl": "Stel de bedrijfsmodus in op [[rt_operating_mode]]",
+    "fr": "Régler le mode de fonctionnement sur [[rt_operating_mode]]",
+    "de": "Betriebsmodus einstellen auf [[rt_operating_mode]]"
   },
   "args": [
     {
@@ -16,12 +22,39 @@
       "name": "rt_operating_mode",
       "type": "dropdown",
       "title": {
-        "en": "mode"
+        "en": "mode",
+        "nl": "modus",
+        "fr": "mode",
+        "de": "Modus"
       },
       "values": [
-        { "id": "heat", "title": { "en": "Heat" } },
-        { "id": "cool", "title": { "en": "Cool" } },
-        { "id": "evap", "title": { "en": "Evaporative" } }
+        {
+          "id": "heat",
+          "title": {
+            "en": "Heat",
+            "nl": "Verwarmen",
+            "fr": "Chauffage",
+            "de": "Heizen"
+          }
+        },
+        {
+          "id": "cool",
+          "title": {
+            "en": "Cool",
+            "nl": "Koelen",
+            "fr": "Refroidissement",
+            "de": "Kühlen"
+          }
+        },
+        {
+          "id": "evap",
+          "title": {
+            "en": "Evaporative",
+            "nl": "Verdampingskoeling",
+            "fr": "Refroidissement évaporatif",
+            "de": "Verdunstungskühlung"
+          }
+        }
       ]
     }
   ]

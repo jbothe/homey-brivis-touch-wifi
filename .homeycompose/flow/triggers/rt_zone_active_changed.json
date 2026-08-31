@@ -1,7 +1,10 @@
 {
   "id": "rt_zone_active_changed",
   "title": {
-    "en": "Actively heating/cooling changed"
+    "en": "Actively heating/cooling changed",
+    "nl": "Actief verwarmen/koelen is gewijzigd",
+    "fr": "L'état chauffage/refroidissement a changé",
+    "de": "Aktives Heizen/Kühlen hat sich geändert"
   },
   "args": [
     {
@@ -15,7 +18,10 @@
       "name": "rt_zone_active",
       "type": "boolean",
       "title": {
-        "en": "Actively heating/cooling"
+        "en": "Actively heating/cooling",
+        "nl": "Actief verwarmen/koelen",
+        "fr": "Chauffe/refroidit activement",
+        "de": "Heizt/kühlt aktiv"
       }
     }
   ]

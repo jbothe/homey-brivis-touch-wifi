@@ -1,10 +1,16 @@
 {
   "id": "rt_fan_speed_set",
   "title": {
-    "en": "Set the fan speed to"
+    "en": "Set the fan speed to",
+    "nl": "Stel de ventilatorsnelheid in op",
+    "fr": "Régler la vitesse du ventilateur sur",
+    "de": "Lüfterstufe einstellen auf"
   },
   "titleFormatted": {
-    "en": "Set the fan speed to [[rt_fan_speed]]"
+    "en": "Set the fan speed to [[rt_fan_speed]]",
+    "nl": "Stel de ventilatorsnelheid in op [[rt_fan_speed]]",
+    "fr": "Régler la vitesse du ventilateur sur [[rt_fan_speed]]",
+    "de": "Lüfterstufe einstellen auf [[rt_fan_speed]]"
   },
   "args": [
     {
@@ -16,7 +22,10 @@
       "name": "rt_fan_speed",
       "type": "number",
       "title": {
-        "en": "speed"
+        "en": "speed",
+        "nl": "snelheid",
+        "fr": "vitesse",
+        "de": "Stufe"
       },
       "min": 1,
       "max": 16,

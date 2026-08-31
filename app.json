@@ -12,7 +12,10 @@
     "en": "Brivis"
   },
   "description": {
-    "en": "Control in the palm of your hand"
+    "en": "Control in the palm of your hand",
+    "nl": "Bediening in de palm van je hand",
+    "fr": "La maîtrise au creux de votre main",
+    "de": "Steuerung in Ihrer Handfläche"
   },
   "category": [
     "climate"
@@ -41,10 +44,16 @@
       {
         "id": "rt_operating_mode_changed",
         "title": {
-          "en": "The operating mode changed"
+          "en": "The operating mode changed",
+          "nl": "De bedrijfsmodus is gewijzigd",
+          "fr": "Le mode de fonctionnement a changé",
+          "de": "Der Betriebsmodus hat sich geändert"
         },
         "titleFormatted": {
-          "en": "The operating mode changed to [[rt_operating_mode]]"
+          "en": "The operating mode changed to [[rt_operating_mode]]",
+          "nl": "De bedrijfsmodus is gewijzigd naar [[rt_operating_mode]]",
+          "fr": "Le mode de fonctionnement est passé à [[rt_operating_mode]]",
+          "de": "Der Betriebsmodus wechselte zu [[rt_operating_mode]]"
         },
         "args": [
           {
@@ -56,25 +65,37 @@
             "name": "rt_operating_mode",
             "type": "dropdown",
             "title": {
-              "en": "mode"
+              "en": "mode",
+              "nl": "modus",
+              "fr": "mode",
+              "de": "Modus"
             },
             "values": [
               {
                 "id": "heat",
                 "title": {
-                  "en": "Heat"
+                  "en": "Heat",
+                  "nl": "Verwarmen",
+                  "fr": "Chauffage",
+                  "de": "Heizen"
                 }
               },
               {
                 "id": "cool",
                 "title": {
-                  "en": "Cool"
+                  "en": "Cool",
+                  "nl": "Koelen",
+                  "fr": "Refroidissement",
+                  "de": "Kühlen"
                 }
               },
               {
                 "id": "evap",
                 "title": {
-                  "en": "Evaporative"
+                  "en": "Evaporative",
+                  "nl": "Verdampingskoeling",
+                  "fr": "Refroidissement évaporatif",
+                  "de": "Verdunstungskühlung"
                 }
               }
             ]
@@ -84,7 +105,10 @@
       {
         "id": "rt_zone_active_changed",
         "title": {
-          "en": "Actively heating/cooling changed"
+          "en": "Actively heating/cooling changed",
+          "nl": "Actief verwarmen/koelen is gewijzigd",
+          "fr": "L'état chauffage/refroidissement a changé",
+          "de": "Aktives Heizen/Kühlen hat sich geändert"
         },
         "args": [
           {
@@ -98,7 +122,10 @@
             "name": "rt_zone_active",
             "type": "boolean",
             "title": {
-              "en": "Actively heating/cooling"
+              "en": "Actively heating/cooling",
+              "nl": "Actief verwarmen/koelen",
+              "fr": "Chauffe/refroidit activement",
+              "de": "Heizt/kühlt aktiv"
             }
           }
         ]
@@ -108,10 +135,16 @@
       {
         "id": "rt_operating_mode_is",
         "title": {
-          "en": "The operating mode !{{is|is not}}"
+          "en": "The operating mode !{{is|is not}}",
+          "nl": "De bedrijfsmodus !{{is|is niet}}",
+          "fr": "Le mode de fonctionnement !{{est|n'est pas}}",
+          "de": "Der Betriebsmodus !{{ist|ist nicht}}"
         },
         "titleFormatted": {
-          "en": "The operating mode !{{is|is not}} [[rt_operating_mode]]"
+          "en": "The operating mode !{{is|is not}} [[rt_operating_mode]]",
+          "nl": "De bedrijfsmodus !{{is|is niet}} [[rt_operating_mode]]",
+          "fr": "Le mode de fonctionnement !{{est|n'est pas}} [[rt_operating_mode]]",
+          "de": "Der Betriebsmodus !{{ist|ist nicht}} [[rt_operating_mode]]"
         },
         "args": [
           {
@@ -123,25 +156,37 @@
             "name": "rt_operating_mode",
             "type": "dropdown",
             "title": {
-              "en": "mode"
+              "en": "mode",
+              "nl": "modus",
+              "fr": "mode",
+              "de": "Modus"
             },
             "values": [
               {
                 "id": "heat",
                 "title": {
-                  "en": "Heat"
+                  "en": "Heat",
+                  "nl": "Verwarmen",
+                  "fr": "Chauffage",
+                  "de": "Heizen"
                 }
               },
               {
                 "id": "cool",
                 "title": {
-                  "en": "Cool"
+                  "en": "Cool",
+                  "nl": "Koelen",
+                  "fr": "Refroidissement",
+                  "de": "Kühlen"
                 }
               },
               {
                 "id": "evap",
                 "title": {
-                  "en": "Evaporative"
+                  "en": "Evaporative",
+                  "nl": "Verdampingskoeling",
+                  "fr": "Refroidissement évaporatif",
+                  "de": "Verdunstungskühlung"
                 }
               }
             ]
@@ -151,7 +196,10 @@
       {
         "id": "rt_zone_active_is",
         "title": {
-          "en": "Zone !{{is|is not}} actively heating/cooling"
+          "en": "Zone !{{is|is not}} actively heating/cooling",
+          "nl": "Zone !{{is|is niet}} actief aan het verwarmen/koelen",
+          "fr": "La zone !{{est|n'est pas}} en train de chauffer/refroidir",
+          "de": "Zone !{{ist|ist nicht}} aktiv am Heizen/Kühlen"
         },
         "args": [
           {
@@ -166,10 +214,16 @@
       {
         "id": "rt_fan_speed_set",
         "title": {
-          "en": "Set the fan speed to"
+          "en": "Set the fan speed to",
+          "nl": "Stel de ventilatorsnelheid in op",
+          "fr": "Régler la vitesse du ventilateur sur",
+          "de": "Lüfterstufe einstellen auf"
         },
         "titleFormatted": {
-          "en": "Set the fan speed to [[rt_fan_speed]]"
+          "en": "Set the fan speed to [[rt_fan_speed]]",
+          "nl": "Stel de ventilatorsnelheid in op [[rt_fan_speed]]",
+          "fr": "Régler la vitesse du ventilateur sur [[rt_fan_speed]]",
+          "de": "Lüfterstufe einstellen auf [[rt_fan_speed]]"
         },
         "args": [
           {
@@ -181,7 +235,10 @@
             "name": "rt_fan_speed",
             "type": "number",
             "title": {
-              "en": "speed"
+              "en": "speed",
+              "nl": "snelheid",
+              "fr": "vitesse",
+              "de": "Stufe"
             },
             "min": 1,
             "max": 16,
@@ -192,10 +249,16 @@
       {
         "id": "rt_operating_mode_set",
         "title": {
-          "en": "Set the operating mode to"
+          "en": "Set the operating mode to",
+          "nl": "Stel de bedrijfsmodus in op",
+          "fr": "Régler le mode de fonctionnement sur",
+          "de": "Betriebsmodus einstellen auf"
         },
         "titleFormatted": {
-          "en": "Set the operating mode to [[rt_operating_mode]]"
+          "en": "Set the operating mode to [[rt_operating_mode]]",
+          "nl": "Stel de bedrijfsmodus in op [[rt_operating_mode]]",
+          "fr": "Régler le mode de fonctionnement sur [[rt_operating_mode]]",
+          "de": "Betriebsmodus einstellen auf [[rt_operating_mode]]"
         },
         "args": [
           {
@@ -207,25 +270,37 @@
             "name": "rt_operating_mode",
             "type": "dropdown",
             "title": {
-              "en": "mode"
+              "en": "mode",
+              "nl": "modus",
+              "fr": "mode",
+              "de": "Modus"
             },
             "values": [
               {
                 "id": "heat",
                 "title": {
-                  "en": "Heat"
+                  "en": "Heat",
+                  "nl": "Verwarmen",
+                  "fr": "Chauffage",
+                  "de": "Heizen"
                 }
               },
               {
                 "id": "cool",
                 "title": {
-                  "en": "Cool"
+                  "en": "Cool",
+                  "nl": "Koelen",
+                  "fr": "Refroidissement",
+                  "de": "Kühlen"
                 }
               },
               {
                 "id": "evap",
                 "title": {
-                  "en": "Evaporative"
+                  "en": "Evaporative",
+                  "nl": "Verdampingskoeling",
+                  "fr": "Refroidissement évaporatif",
+                  "de": "Verdunstungskühlung"
                 }
               }
             ]
@@ -238,7 +313,10 @@
     {
       "id": "zone",
       "name": {
-        "en": "Touch Wi-Fi Zone"
+        "en": "Touch Wi-Fi Zone",
+        "nl": "Touch Wi-Fi Zone",
+        "fr": "Zone Touch Wi-Fi",
+        "de": "Touch Wi-Fi Zone"
       },
       "class": "thermostat",
       "capabilities": [
@@ -263,17 +341,26 @@
         },
         "onoff": {
           "title": {
-            "en": "System Power"
+            "en": "System Power",
+            "nl": "Systeem aan/uit",
+            "fr": "Système marche/arrêt",
+            "de": "System Ein/Aus"
           }
         },
         "onoff.fan": {
           "title": {
-            "en": "Circulation Fan"
+            "en": "Circulation Fan",
+            "nl": "Circulatieventilator",
+            "fr": "Ventilateur de circulation",
+            "de": "Umluftventilator"
           }
         },
         "onoff.pump": {
           "title": {
-            "en": "Evaporative Pump"
+            "en": "Evaporative Pump",
+            "nl": "Verdampingspomp",
+            "fr": "Pompe évaporative",
+            "de": "Verdunstungspumpe"
           }
         }
       },
@@ -307,7 +394,10 @@
     "rt_control_mode": {
       "type": "enum",
       "title": {
-        "en": "Control mode"
+        "en": "Control mode",
+        "nl": "Bedieningsmodus",
+        "fr": "Mode de commande",
+        "de": "Steuermodus"
       },
       "getable": true,
       "setable": false,
@@ -317,13 +407,19 @@
         {
           "id": "schedule",
           "title": {
-            "en": "Schedule"
+            "en": "Schedule",
+            "nl": "Schema",
+            "fr": "Programmation",
+            "de": "Zeitplan"
           }
         },
         {
           "id": "manual",
           "title": {
-            "en": "Manual"
+            "en": "Manual",
+            "nl": "Handmatig",
+            "fr": "Manuel",
+            "de": "Manuell"
           }
         }
       ]
@@ -331,7 +427,10 @@
     "rt_fan_speed": {
       "type": "number",
       "title": {
-        "en": "Fan speed"
+        "en": "Fan speed",
+        "nl": "Ventilatorsnelheid",
+        "fr": "Vitesse du ventilateur",
+        "de": "Lüfterstufe"
       },
       "getable": true,
       "setable": true,
@@ -344,7 +443,10 @@
     "rt_operating_mode": {
       "type": "enum",
       "title": {
-        "en": "Operating mode"
+        "en": "Operating mode",
+        "nl": "Bedrijfsmodus",
+        "fr": "Mode de fonctionnement",
+        "de": "Betriebsmodus"
       },
       "getable": true,
       "setable": true,
@@ -353,19 +455,28 @@
         {
           "id": "heat",
           "title": {
-            "en": "Heat"
+            "en": "Heat",
+            "nl": "Verwarmen",
+            "fr": "Chauffage",
+            "de": "Heizen"
           }
         },
         {
           "id": "cool",
           "title": {
-            "en": "Cool"
+            "en": "Cool",
+            "nl": "Koelen",
+            "fr": "Refroidissement",
+            "de": "Kühlen"
           }
         },
         {
           "id": "evap",
           "title": {
-            "en": "Evaporative"
+            "en": "Evaporative",
+            "nl": "Verdampingskoeling",
+            "fr": "Refroidissement évaporatif",
+            "de": "Verdunstungskühlung"
           }
         }
       ]
@@ -373,7 +484,10 @@
     "rt_schedule_override": {
       "type": "enum",
       "title": {
-        "en": "Schedule override"
+        "en": "Schedule override",
+        "nl": "Schema-overbrugging",
+        "fr": "Dérogation au programme",
+        "de": "Zeitplan-Übersteuerung"
       },
       "getable": true,
       "setable": false,
@@ -383,19 +497,28 @@
         {
           "id": "none",
           "title": {
-            "en": "None"
+            "en": "None",
+            "nl": "Geen",
+            "fr": "Aucune",
+            "de": "Keine"
           }
         },
         {
           "id": "advance",
           "title": {
-            "en": "Advance"
+            "en": "Advance",
+            "nl": "Vooruit",
+            "fr": "Avance",
+            "de": "Vorlauf"
           }
         },
         {
           "id": "operation",
           "title": {
-            "en": "Operation"
+            "en": "Operation",
+            "nl": "Bediening",
+            "fr": "Fonctionnement",
+            "de": "Betrieb"
           }
         }
       ]
@@ -403,7 +526,10 @@
     "rt_schedule_period": {
       "type": "enum",
       "title": {
-        "en": "Schedule period"
+        "en": "Schedule period",
+        "nl": "Schemaperiode",
+        "fr": "Période du programme",
+        "de": "Zeitplanabschnitt"
       },
       "getable": true,
       "setable": false,
@@ -413,31 +539,46 @@
         {
           "id": "wake",
           "title": {
-            "en": "Wake"
+            "en": "Wake",
+            "nl": "Opstaan",
+            "fr": "Réveil",
+            "de": "Aufstehen"
           }
         },
         {
           "id": "leave",
           "title": {
-            "en": "Leave"
+            "en": "Leave",
+            "nl": "Vertrek",
+            "fr": "Départ",
+            "de": "Verlassen"
           }
         },
         {
           "id": "return",
           "title": {
-            "en": "Return"
+            "en": "Return",
+            "nl": "Thuiskomst",
+            "fr": "Retour",
+            "de": "Rückkehr"
           }
         },
         {
           "id": "presleep",
           "title": {
-            "en": "Pre-sleep"
+            "en": "Pre-sleep",
+            "nl": "Voor het slapen",
+            "fr": "Avant le coucher",
+            "de": "Vor dem Schlafen"
           }
         },
         {
           "id": "sleep",
           "title": {
-            "en": "Sleep"
+            "en": "Sleep",
+            "nl": "Slapen",
+            "fr": "Coucher",
+            "de": "Schlafen"
           }
         }
       ]
@@ -445,17 +586,26 @@
     "rt_zone_active": {
       "type": "boolean",
       "title": {
-        "en": "Actively heating/cooling"
+        "en": "Actively heating/cooling",
+        "nl": "Actief verwarmen/koelen",
+        "fr": "Chauffe/refroidit activement",
+        "de": "Heizt/kühlt aktiv"
       },
       "getable": true,
       "setable": false,
       "uiComponent": "sensor",
       "icon": "/assets/rt_zone_active.svg",
       "insightsTitleTrue": {
-        "en": "Started actively heating/cooling"
+        "en": "Started actively heating/cooling",
+        "nl": "Begon actief te verwarmen/koelen",
+        "fr": "A commencé à chauffer/refroidir",
+        "de": "Begann aktiv zu heizen/kühlen"
       },
       "insightsTitleFalse": {
-        "en": "Stopped actively heating/cooling"
+        "en": "Stopped actively heating/cooling",
+        "nl": "Stopte met actief verwarmen/koelen",
+        "fr": "A cessé de chauffer/refroidir",
+        "de": "Hörte auf, aktiv zu heizen/kühlen"
       }
     }
   }

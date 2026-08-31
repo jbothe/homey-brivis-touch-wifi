@@ -1,7 +1,10 @@
 {
   "type": "enum",
   "title": {
-    "en": "Schedule override"
+    "en": "Schedule override",
+    "nl": "Schema-overbrugging",
+    "fr": "Dérogation au programme",
+    "de": "Zeitplan-Übersteuerung"
   },
   "getable": true,
   "setable": false,
@@ -11,19 +14,28 @@
     {
       "id": "none",
       "title": {
-        "en": "None"
+        "en": "None",
+        "nl": "Geen",
+        "fr": "Aucune",
+        "de": "Keine"
       }
     },
     {
       "id": "advance",
       "title": {
-        "en": "Advance"
+        "en": "Advance",
+        "nl": "Vooruit",
+        "fr": "Avance",
+        "de": "Vorlauf"
       }
     },
     {
       "id": "operation",
       "title": {
-        "en": "Operation"
+        "en": "Operation",
+        "nl": "Bediening",
+        "fr": "Fonctionnement",
+        "de": "Betrieb"
       }
     }
   ]

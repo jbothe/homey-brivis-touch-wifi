@@ -1,7 +1,10 @@
 {
   "type": "enum",
   "title": {
-    "en": "Schedule period"
+    "en": "Schedule period",
+    "nl": "Schemaperiode",
+    "fr": "Période du programme",
+    "de": "Zeitplanabschnitt"
   },
   "getable": true,
   "setable": false,
@@ -11,31 +14,46 @@
     {
       "id": "wake",
       "title": {
-        "en": "Wake"
+        "en": "Wake",
+        "nl": "Opstaan",
+        "fr": "Réveil",
+        "de": "Aufstehen"
       }
     },
     {
       "id": "leave",
       "title": {
-        "en": "Leave"
+        "en": "Leave",
+        "nl": "Vertrek",
+        "fr": "Départ",
+        "de": "Verlassen"
       }
     },
     {
       "id": "return",
       "title": {
-        "en": "Return"
+        "en": "Return",
+        "nl": "Thuiskomst",
+        "fr": "Retour",
+        "de": "Rückkehr"
       }
     },
     {
       "id": "presleep",
       "title": {
-        "en": "Pre-sleep"
+        "en": "Pre-sleep",
+        "nl": "Voor het slapen",
+        "fr": "Avant le coucher",
+        "de": "Vor dem Schlafen"
       }
     },
     {
       "id": "sleep",
       "title": {
-        "en": "Sleep"
+        "en": "Sleep",
+        "nl": "Slapen",
+        "fr": "Coucher",
+        "de": "Schlafen"
       }
     }
   ]

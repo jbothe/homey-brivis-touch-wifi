@@ -1,16 +1,25 @@
 {
   "type": "boolean",
   "title": {
-    "en": "Actively heating/cooling"
+    "en": "Actively heating/cooling",
+    "nl": "Actief verwarmen/koelen",
+    "fr": "Chauffe/refroidit activement",
+    "de": "Heizt/kühlt aktiv"
   },
   "getable": true,
   "setable": false,
   "uiComponent": "sensor",
   "icon": "/assets/rt_zone_active.svg",
   "insightsTitleTrue": {
-    "en": "Started actively heating/cooling"
+    "en": "Started actively heating/cooling",
+    "nl": "Begon actief te verwarmen/koelen",
+    "fr": "A commencé à chauffer/refroidir",
+    "de": "Begann aktiv zu heizen/kühlen"
   },
   "insightsTitleFalse": {
-    "en": "Stopped actively heating/cooling"
+    "en": "Stopped actively heating/cooling",
+    "nl": "Stopte met actief verwarmen/koelen",
+    "fr": "A cessé de chauffer/refroidir",
+    "de": "Hörte auf, aktiv zu heizen/kühlen"
   }
 }

@@ -1,7 +1,10 @@
 {
   "id": "zone",
   "name": {
-    "en": "Touch Wi-Fi Zone"
+    "en": "Touch Wi-Fi Zone",
+    "nl": "Touch Wi-Fi Zone",
+    "fr": "Zone Touch Wi-Fi",
+    "de": "Touch Wi-Fi Zone"
   },
   "class": "thermostat",
   "capabilities": [
@@ -26,17 +29,26 @@
     },
     "onoff": {
       "title": {
-        "en": "System Power"
+        "en": "System Power",
+        "nl": "Systeem aan/uit",
+        "fr": "Système marche/arrêt",
+        "de": "System Ein/Aus"
       }
     },
     "onoff.fan": {
       "title": {
-        "en": "Circulation Fan"
+        "en": "Circulation Fan",
+        "nl": "Circulatieventilator",
+        "fr": "Ventilateur de circulation",
+        "de": "Umluftventilator"
       }
     },
     "onoff.pump": {
       "title": {
-        "en": "Evaporative Pump"
+        "en": "Evaporative Pump",
+        "nl": "Verdampingspomp",
+        "fr": "Pompe évaporative",
+        "de": "Verdunstungspumpe"
       }
     }
   },

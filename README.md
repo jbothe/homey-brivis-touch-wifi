@@ -140,5 +140,18 @@ broadcast discovery for now).
 - `assets/rt_*.svg` — one icon per custom capability, line art on the same 960x960 canvas as the
   others, stroked in `currentColor` so they follow the surrounding UI.
 - `README.txt` — the App Store listing text (`homey app publish` requires this file, and refuses
-  to run without it). Plain text only: no Markdown, no URLs, one to two paragraphs. It is a
-  separate file from this one, which is the developer readme and is not shown in the store.
+  to run without it), with `README.nl.txt`, `README.fr.txt` and `README.de.txt` alongside it. Plain
+  text only: no Markdown, no URLs, one to two paragraphs. Separate from this file, which is the
+  developer readme and is not shown in the store.
+
+## Translations
+
+English, Dutch, French and German, across the app description, driver, capabilities (titles, enum
+values and Insights titles) and every Flow card. The guidelines treat a partially translated app as
+worse than an English one (1.11), so a string is either translated everywhere or nowhere. Two
+deliberate exceptions: the app name, since `Brivis` is the brand, and `Touch Wi-Fi Zone`, which only
+reorders in French.
+
+The on/off title is the one translated string not in a manifest — it depends on the unit's current
+mode, so `ONOFF_TITLES` in `drivers/zone/device.ts` carries all four languages and must be kept in
+step with the rest.

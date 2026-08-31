@@ -1,7 +1,10 @@
 {
   "id": "rt_zone_active_is",
   "title": {
-    "en": "Zone !{{is|is not}} actively heating/cooling"
+    "en": "Zone !{{is|is not}} actively heating/cooling",
+    "nl": "Zone !{{is|is niet}} actief aan het verwarmen/koelen",
+    "fr": "La zone !{{est|n'est pas}} en train de chauffer/refroidir",
+    "de": "Zone !{{ist|ist nicht}} aktiv am Heizen/Kühlen"
   },
   "args": [
     {

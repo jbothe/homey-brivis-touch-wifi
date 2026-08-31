@@ -11,7 +11,10 @@
     "en": "Brivis"
   },
   "description": {
-    "en": "Control in the palm of your hand"
+    "en": "Control in the palm of your hand",
+    "nl": "Bediening in de palm van je hand",
+    "fr": "La maîtrise au creux de votre main",
+    "de": "Steuerung in Ihrer Handfläche"
   },
   "category": [
     "climate"
