@@ -206,3 +206,78 @@ test('repeated init() leaves the zone list and the connection intact', async () 
     await module_.close();
   }
 });
+
+test('a command the module cannot report back is sent once and accepted, not retried', async () => {
+  // With the system off the module stops sending the ZxO zone operation blocks
+  // entirely, so a setpoint write has no field to confirm against.
+  // commandSucceeded() gives up on a missing group, which made all three
+  // attempts certain to fail: 30 sec of blocked queue and held connection for a
+  // command that could never have been verified.
+  //
+  // Confirmed against real hardware: writing SP=24 with the system off and then
+  // switching it on brings back ZAO.SP=24. The write lands; only the
+  // confirmation is missing. Failing here reverted the capability away from a
+  // value the module had taken.
+  const state: Record<string, Record<string, Record<string, string>>> = {
+    SYST: {
+      CFG: {
+        MTSP: 'Y', TU: 'C', ZA: 'Zone A', ZB: 'Zone B', ZC: '    ', ZD: '    ',
+      },
+      AVM: { HG: 'Y', CG: 'N', EC: 'N' },
+      OSS: { MD: 'H' },
+    },
+    // Powered off: OOP and the ZxS status blocks only - no ZAO/ZBO.
+    HGOM: {
+      CFG: {
+        ZAIS: 'Y', ZBIS: 'Y', ZCIS: 'N', ZDIS: 'N',
+      },
+      OOP: { ST: 'F', FL: '00' },
+      ZAS: { AE: 'N', MT: '200' },
+      ZBS: { AE: 'N', MT: '199' },
+    },
+  };
+
+  let sequence = 0;
+  const frame = () => {
+    sequence = (sequence + 1) % 255;
+    return `N${String(sequence).padStart(6, '0')}${JSON.stringify([{ SYST: state.SYST }, { HGOM: state.HGOM }])}`;
+  };
+
+  const sockets: net.Socket[] = [];
+  const received: string[] = [];
+  const server = net.createServer((socket) => {
+    sockets.push(socket);
+    const stream = setInterval(() => socket.write(frame()), 150);
+    socket.on('close', () => clearInterval(stream));
+    socket.on('error', () => clearInterval(stream));
+    socket.on('data', (chunk) => received.push(chunk.toString()));
+    socket.write(frame());
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as net.AddressInfo;
+
+  const lines: string[] = [];
+  const rinnai = connect(port, lines);
+
+  try {
+    await rinnai.init();
+    assert.equal(rinnai.isOn, false, 'fixture is a powered-off system');
+
+    const started = Date.now();
+    await rinnai.setTargetTemperature(24, 'A');
+    const elapsed = Date.now() - started;
+
+    assert.ok(elapsed < 5000, `should not sit through the retries, took ${elapsed}ms`);
+    assert.equal(received.length, 1, 'the command should be sent exactly once, not retried');
+    assert.match(received[0], /"ZAO":\{"SP":"24"\}/);
+
+    // Accepted, but the log has to say it went out unverified - this is the one
+    // path where a resolved command is not proof the module took it.
+    const warned = lines.filter((line) => line.includes('unconfirmed'));
+    assert.equal(warned.length, 1, `expected one unconfirmed warning, got ${JSON.stringify(lines)}`);
+  } finally {
+    await rinnai.close();
+    sockets.forEach((socket) => socket.destroy());
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  }
+});

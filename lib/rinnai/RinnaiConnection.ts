@@ -203,6 +203,17 @@ export class RinnaiConnection {
     return this.service.getState();
   }
 
+  /**
+   * The module's last raw status payload: `[{ SYST: ... }, { HGOM|CGOM|ECOM:
+   * ... }]`. Diagnostic only - everything the app acts on goes through the
+   * typed getters above. Exposed because the protocol path table is reverse
+   * engineered, so a reading that disagrees with the wall controller can only
+   * be resolved by looking at what the module actually sent.
+   */
+  get rawStatus(): Record<string, unknown>[] | undefined {
+    return this.repository.lastStatus;
+  }
+
   getZoneName(zone: RinnaiZone): string {
     return this.service.getZoneName(zone);
   }
