@@ -31,19 +31,6 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
   private pumpCapabilityPending = false;
 
   async onInit() {
-    if (!this.hasCapability('rt_zone_active')) {
-      // Migration: devices paired before this status capability existed.
-      await this.addCapability('rt_zone_active');
-    }
-
-    // Same migration for the read-only status capabilities added alongside it.
-    // Ordered as listed so they appear together in the device UI.
-    for (const capability of ['rt_control_mode', 'rt_schedule_override', 'rt_schedule_period']) {
-      if (!this.hasCapability(capability)) {
-        await this.addCapability(capability);
-      }
-    }
-
     // capabilitiesOptions.step is 1 (see driver.compose.json) and the device
     // detail thermostat UI respects that, but the Homey dashboard widget's
     // +/- arrows ignore it and always step by 0.5. That's a platform bug,
