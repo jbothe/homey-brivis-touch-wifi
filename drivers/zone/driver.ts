@@ -4,20 +4,6 @@ import Homey from 'homey';
 import type { RinnaiTouchApp } from '../../app';
 import type { RinnaiMode, RinnaiZone } from '../../lib/rinnai/RinnaiConnection';
 
-// Unit-wide controls that live on every zone device (they mirror each other via
-// the app's event fan-out). onoff.pump is deliberately not included here - it's
-// evap-only and added/removed dynamically by the device based on live mode,
-// not fixed at pairing time (see ZoneDevice#syncPumpCapability).
-const BASE_CAPABILITIES = [
-  'target_temperature',
-  'measure_temperature',
-  'rt_zone_active',
-  'onoff',
-  'rt_operating_mode',
-  'onoff.fan',
-  'rt_fan_speed',
-];
-
 // Flow card arg/state property names must match their capability id exactly
 // (that's the convention Homey's own auto-generated flow cards use, e.g.
 // thermostat_mode), and capability ids are snake_case here.
@@ -79,6 +65,22 @@ class ZoneDriver extends Homey.Driver {
     }
   }
 
+  /**
+   * What a newly paired zone starts with: everything the driver declares except
+   * onoff.pump, which is evap-only and added or removed by the device from the
+   * live mode rather than fixed at pairing time (ZoneDevice#syncPumpCapability).
+   *
+   * Read from the manifest rather than kept as a second list here. The
+   * capabilities returned by onPairListDevices() override the manifest, so a
+   * hand-maintained copy drifts silently: three capabilities added to
+   * driver.compose.json and not here paired devices without them, which then
+   * threw `Invalid Capability` on every sync.
+   */
+  private pairingCapabilities(): string[] {
+    return (this.manifest.capabilities as string[])
+      .filter((capability) => capability !== 'onoff.pump');
+  }
+
   async onPairListDevices() {
     await this.app.rinnai.init();
 
@@ -93,7 +95,7 @@ class ZoneDriver extends Homey.Driver {
       .map((zone) => ({
         name: rinnai.getZoneName(zone),
         data: { zone },
-        capabilities: BASE_CAPABILITIES,
+        capabilities: this.pairingCapabilities(),
       }));
   }
 
