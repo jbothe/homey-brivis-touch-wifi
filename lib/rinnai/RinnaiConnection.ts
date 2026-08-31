@@ -68,6 +68,11 @@ const CONTROL_MODE_TO_STRING: Record<number, RinnaiControlMode> = { 0: 'manual',
 export type RinnaiScheduleOverride = 'none' | 'advance' | 'operation';
 const SCHEDULE_OVERRIDE_TO_STRING: Record<number, RinnaiScheduleOverride> = { 0: 'none', 1: 'advance', 2: 'operation' };
 
+export type RinnaiSchedulePeriod = 'wake' | 'leave' | 'return' | 'presleep' | 'sleep';
+const SCHEDULE_PERIOD_TO_STRING: Record<number, RinnaiSchedulePeriod> = {
+  0: 'wake', 1: 'leave', 2: 'return', 3: 'presleep', 4: 'sleep',
+};
+
 // How old the last status frame may be before refresh() calls the read a
 // failure. A successful read returns just after a frame arrives, and the
 // module streams roughly one a second while connected, so anything this old
@@ -255,6 +260,14 @@ export class RinnaiConnection {
 
   getScheduleOverride(zone: RinnaiZone): RinnaiScheduleOverride | undefined {
     return SCHEDULE_OVERRIDE_TO_STRING[this.service.getScheduleOverride(zone)];
+  }
+
+  /**
+   * Which block of the zone's own schedule is current. Heat/cool only - the
+   * module does not report it in evap mode, where it reads undefined.
+   */
+  getSchedulePeriod(zone: RinnaiZone): RinnaiSchedulePeriod | undefined {
+    return SCHEDULE_PERIOD_TO_STRING[this.service.getSchedulePeriod(zone)];
   }
 
   getFanState(): boolean {

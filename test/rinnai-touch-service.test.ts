@@ -72,8 +72,8 @@ function heatStatus(st: string) {
         ZBO: {
           OP: 'M', SP: '19', AO: 'N', UE: 'N',
         },
-        ZAS: { MT: '205', AE: 'Y' },
-        ZBS: { MT: '198', AE: 'N' },
+        ZAS: { MT: '205', AE: 'Y', AT: 'W' },
+        ZBS: { MT: '198', AE: 'N', AT: 'S' },
       },
     },
   ];
@@ -295,4 +295,34 @@ test('multi-setpoint active status stays per zone', async () => {
 
   assert.equal(service.getSystemActive('A'), true);
   assert.equal(service.getSystemActive('B'), false);
+});
+
+//
+// Schedule period
+//
+// Read-only, and the one path in the table with no prior code behind it. The
+// single letter codes are inferred from the path table's comment rather than
+// observed, so the unknown-value path matters as much as the happy one.
+
+test('schedule period reads per zone', async () => {
+  const { service } = await startService(heatStatus('N'));
+
+  assert.equal(service.getSchedulePeriod('A'), service.SchedulePeriods.WAKE);
+  assert.equal(service.getSchedulePeriod('B'), service.SchedulePeriods.SLEEP);
+});
+
+test('an unrecognised schedule period is left unset rather than guessed', async () => {
+  const status = heatStatus('N');
+  (status[1] as { HGOM: { ZAS: { AT: string } } }).HGOM.ZAS.AT = 'X';
+  const { service } = await startService(status);
+
+  assert.equal(service.getSchedulePeriod('A'), undefined);
+  assert.equal(service.getSchedulePeriod('B'), service.SchedulePeriods.SLEEP,
+    'one bad code does not discard the others');
+});
+
+test('evap reports no schedule period, since the protocol has no path for it', async () => {
+  const { service } = await startService(evapStatus('24'));
+
+  assert.equal(service.getSchedulePeriod('A'), undefined);
 });

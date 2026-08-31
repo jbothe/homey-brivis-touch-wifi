@@ -36,6 +36,14 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
       await this.addCapability('rt_zone_active');
     }
 
+    // Same migration for the read-only status capabilities added alongside it.
+    // Ordered as listed so they appear together in the device UI.
+    for (const capability of ['rt_control_mode', 'rt_schedule_override', 'rt_schedule_period']) {
+      if (!this.hasCapability(capability)) {
+        await this.addCapability(capability);
+      }
+    }
+
     // capabilitiesOptions.step is 1 (see driver.compose.json) and the device
     // detail thermostat UI respects that, but the Homey dashboard widget's
     // +/- arrows ignore it and always step by 0.5. That's a platform bug,
@@ -129,6 +137,17 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
         .catch((err) => this.error(err));
     }
     this.lastZoneActive = zoneActive;
+
+    // Read-only reflections of what the wall controller is set to. Each reads
+    // undefined where the module does not report it - schedule period in evap
+    // mode, and all three before the first status frame - and null is how a
+    // Homey capability says "unknown", as opposed to holding a stale value.
+    this.setCapabilityValue('rt_control_mode',
+      rinnai.getControlMode(zone) ?? null).catch((err) => this.error(err));
+    this.setCapabilityValue('rt_schedule_override',
+      rinnai.getScheduleOverride(zone) ?? null).catch((err) => this.error(err));
+    this.setCapabilityValue('rt_schedule_period',
+      rinnai.getSchedulePeriod(zone) ?? null).catch((err) => this.error(err));
 
     const targetTemp = rinnai.getTargetTemperature(zone);
     if (targetTemp !== undefined) {

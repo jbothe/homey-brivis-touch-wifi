@@ -245,6 +245,9 @@
         "target_temperature",
         "measure_temperature",
         "rt_zone_active",
+        "rt_control_mode",
+        "rt_schedule_override",
+        "rt_schedule_period",
         "onoff",
         "rt_operating_mode",
         "onoff.fan",
@@ -301,6 +304,30 @@
     }
   ],
   "capabilities": {
+    "rt_control_mode": {
+      "type": "enum",
+      "title": {
+        "en": "Control mode"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/assets/rt_control_mode.svg",
+      "values": [
+        {
+          "id": "schedule",
+          "title": {
+            "en": "Schedule"
+          }
+        },
+        {
+          "id": "manual",
+          "title": {
+            "en": "Manual"
+          }
+        }
+      ]
+    },
     "rt_fan_speed": {
       "type": "number",
       "title": {
@@ -339,6 +366,78 @@
           "id": "evap",
           "title": {
             "en": "Evaporative"
+          }
+        }
+      ]
+    },
+    "rt_schedule_override": {
+      "type": "enum",
+      "title": {
+        "en": "Schedule override"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/assets/rt_schedule_override.svg",
+      "values": [
+        {
+          "id": "none",
+          "title": {
+            "en": "None"
+          }
+        },
+        {
+          "id": "advance",
+          "title": {
+            "en": "Advance"
+          }
+        },
+        {
+          "id": "operation",
+          "title": {
+            "en": "Operation"
+          }
+        }
+      ]
+    },
+    "rt_schedule_period": {
+      "type": "enum",
+      "title": {
+        "en": "Schedule period"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/assets/rt_schedule_period.svg",
+      "values": [
+        {
+          "id": "wake",
+          "title": {
+            "en": "Wake"
+          }
+        },
+        {
+          "id": "leave",
+          "title": {
+            "en": "Leave"
+          }
+        },
+        {
+          "id": "return",
+          "title": {
+            "en": "Return"
+          }
+        },
+        {
+          "id": "presleep",
+          "title": {
+            "en": "Pre-sleep"
+          }
+        },
+        {
+          "id": "sleep",
+          "title": {
+            "en": "Sleep"
           }
         }
       ]

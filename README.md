@@ -26,6 +26,19 @@ Each zone also exposes a read-only **"Actively heating/cooling"** status, separa
 switch — whether the zone is actually calling for heat/cool right now, as opposed to whether the
 system is switched on.
 
+Alongside it are three more read-only statuses, which mirror what the wall controller is set to
+rather than letting Homey change it:
+
+- **Control mode** — whether the zone is following its schedule or a manual setpoint.
+- **Schedule override** — None, Advance, or Operation, so an Advance pressed at a wall controller
+  is visible in Homey.
+- **Schedule period** — which block of the zone's schedule is current (Wake, Leave, Return,
+  Pre-sleep, Sleep). Heat/cool only; the module reports no equivalent in evap mode, where it reads
+  as unknown.
+
+"Actively heating/cooling" prefers the per-zone field on multi-setpoint hardware and falls back to
+the unit-wide flag otherwise, since the per-zone path does not exist on single-setpoint systems.
+
 The zone device's on/off is mode-aware, matching the hardware: in evaporative mode on a
 multi-setpoint system it switches that zone's cooler independently (each zone has its own), while
 everywhere else it switches the whole system on or off (and the sibling zones reflect it, including
@@ -107,8 +120,9 @@ plus manual workflows to bump the app version and publish.
 
 Connects, discovers, and controls heat/cool/evap mode, per-zone temperature and on/off, fan, pump,
 and polls for out-of-band changes. Has a starter set of Flow cards (above). Not yet implemented:
-schedule/advance/manual controls (read for diagnostics, not exposed as capabilities or actions), and
-a manual IP override (the module must be reachable via UDP broadcast discovery for now).
+writing the schedule/advance/manual controls (they are exposed read-only, but nothing sets them),
+per-zone dampers in heat/cool, and a manual IP override (the module must be reachable via UDP
+broadcast discovery for now).
 
 ## App Store assets
 
@@ -123,6 +137,8 @@ a manual IP override (the module must be reachable via UDP broadcast discovery f
 - `assets/images/` — app image at 250x175 and 500x350 (10:7). The optional 1000x700 XLarge is
   not supplied, so the manifest declares only `small` and `large`; add both together if a
   higher-resolution original turns up.
+- `assets/rt_*.svg` — one icon per custom capability, line art on the same 960x960 canvas as the
+  others, stroked in `currentColor` so they follow the surrounding UI.
 - `README.txt` — the App Store listing text (`homey app publish` requires this file, and refuses
   to run without it). Plain text only: no Markdown, no URLs, one to two paragraphs. It is a
   separate file from this one, which is the developer readme and is not shown in the store.

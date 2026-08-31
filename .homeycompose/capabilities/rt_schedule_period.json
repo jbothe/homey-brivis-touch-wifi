@@ -1,0 +1,42 @@
+{
+  "type": "enum",
+  "title": {
+    "en": "Schedule period"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "icon": "/assets/rt_schedule_period.svg",
+  "values": [
+    {
+      "id": "wake",
+      "title": {
+        "en": "Wake"
+      }
+    },
+    {
+      "id": "leave",
+      "title": {
+        "en": "Leave"
+      }
+    },
+    {
+      "id": "return",
+      "title": {
+        "en": "Return"
+      }
+    },
+    {
+      "id": "presleep",
+      "title": {
+        "en": "Pre-sleep"
+      }
+    },
+    {
+      "id": "sleep",
+      "title": {
+        "en": "Sleep"
+      }
+    }
+  ]
+}

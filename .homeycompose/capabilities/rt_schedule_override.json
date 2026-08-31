@@ -1,0 +1,30 @@
+{
+  "type": "enum",
+  "title": {
+    "en": "Schedule override"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "icon": "/assets/rt_schedule_override.svg",
+  "values": [
+    {
+      "id": "none",
+      "title": {
+        "en": "None"
+      }
+    },
+    {
+      "id": "advance",
+      "title": {
+        "en": "Advance"
+      }
+    },
+    {
+      "id": "operation",
+      "title": {
+        "en": "Operation"
+      }
+    }
+  ]
+}
