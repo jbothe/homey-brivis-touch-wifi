@@ -9,10 +9,10 @@
     "local"
   ],
   "name": {
-    "en": "Brivis Touch"
+    "en": "Brivis"
   },
   "description": {
-    "en": "Control your Brivis ducted gas heating and evaporative cooling system via the Brivis Touch Wi-Fi module (formerly known as Rinnai Touch)."
+    "en": "Control in the palm of your hand"
   },
   "category": [
     "climate"
@@ -232,7 +232,7 @@
     {
       "id": "zone",
       "name": {
-        "en": "Brivis Touch Zone"
+        "en": "Touch Wi-Fi Zone"
       },
       "class": "thermostat",
       "capabilities": [

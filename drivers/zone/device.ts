@@ -91,8 +91,8 @@ class ZoneDevice extends Homey.Device implements RinnaiSyncableDevice {
       await this.app.rinnai.init();
       this.syncFromService();
     } catch (err) {
-      this.error('Failed to reach the Brivis Touch module', err);
-      await this.setUnavailable('Waiting for connection to the Brivis Touch module').catch(() => undefined);
+      this.error('Failed to reach the Brivis Touch Wi-Fi module', err);
+      await this.setUnavailable('Waiting for connection to the Brivis Touch Wi-Fi module').catch(() => undefined);
     }
   }
 

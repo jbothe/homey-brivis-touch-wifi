@@ -1,7 +1,7 @@
 {
   "id": "zone",
   "name": {
-    "en": "Brivis Touch Zone"
+    "en": "Touch Wi-Fi Zone"
   },
   "class": "thermostat",
   "capabilities": [

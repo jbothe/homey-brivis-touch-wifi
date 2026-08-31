@@ -1,8 +1,13 @@
-# Brivis Touch
+# Brivis
 
 A [Homey](https://homey.app) app for controlling a Brivis ducted gas heating / evaporative cooling
-system via its Wi-Fi module — the **Brivis Touch Wi-Fi** module, formerly marketed as the
-**Rinnai Touch** Wi-Fi module (same hardware, same protocol).
+system via the [**Brivis Touch Wi-Fi**](https://www.brivis.com.au/online/heating/gas-ducted-heating/brivis-touch-wi-fi/)
+controller module — sold as the *Brivis Touch Wi-Fi Controller Module Kit*, and previously marketed
+as the **Rinnai Touch** Wi-Fi module (same hardware, same protocol).
+
+The app is named for the vendor (**Brivis**) and its single driver for the device
+(**Touch Wi-Fi Zone**), per the Homey App Store
+[guidelines](https://apps.developer.homey.app/app-store/guidelines) on app naming.
 
 There's no public SDK for this module. The device/network protocol layer in this app is adapted
 from [homebridge-rinnai-touch-plugin](https://github.com/mantorok1/homebridge-rinnai-touch-plugin)
@@ -10,7 +15,7 @@ from [homebridge-rinnai-touch-plugin](https://github.com/mantorok1/homebridge-ri
 
 ## Devices
 
-- **Brivis Touch Zone** — one device per zone controller (e.g. Upstairs, Downstairs), modelled on
+- **Touch Wi-Fi Zone** — one device per zone controller (e.g. Upstairs, Downstairs), modelled on
   the physical wall controllers, which are peers: each exposes the zone's target/measured
   temperature plus the unit-wide controls (operating mode, circulation fan, fan speed, and — on
   evaporative systems, while the system is actually in evap mode — the pump). Changing a unit-wide
@@ -51,6 +56,12 @@ what makes the phone app report the unit as busy. To pick up
 changes made outside Homey — at a wall controller, or the phone app — `app.ts` polls every 15s to
 refresh state, logging a one-line snapshot of the full state (mode, on/off, fan, pump, and every
 per-zone field) on each successful poll.
+
+While the system is switched off the module stops reporting the per-zone *operation* blocks
+(`{mode}.Z{zone}O`), which is where the target temperature, control mode and schedule override live.
+Setpoints still apply — writing one with the system off and then switching it on brings the new
+value back — but the module cannot echo them until it is on again, so the app sends those commands
+once and logs them as unconfirmed rather than retrying or reporting a failure.
 
 After three consecutive failed polls (~45s) the zone devices are marked unavailable rather than
 continuing to serve their last known values, and become available again on the next successful poll.

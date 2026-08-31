@@ -16,7 +16,7 @@ const POLL_FAILURES_BEFORE_UNAVAILABLE = 3;
 // Ceiling on the backoff below. Once the module is unreachable there is
 // nothing to poll for, so this is purely how quickly we notice it coming back.
 const POLL_BACKOFF_MAX_MS = 300000;
-const UNAVAILABLE_MESSAGE = 'Lost connection to the Brivis Touch module';
+const UNAVAILABLE_MESSAGE = 'Lost connection to the Brivis Touch Wi-Fi module';
 // Repeat the state line this often even when nothing has changed, so a quiet
 // log still shows the app polling and what it last saw. 20 polls is ~5 min.
 const POLLS_PER_STATE_HEARTBEAT = 20;
@@ -144,7 +144,7 @@ class RinnaiTouchApp extends Homey.App {
 
     if (this.devicesUnavailable) {
       this.devicesUnavailable = false;
-      this.log('Reconnected to the Brivis Touch module');
+      this.log('Reconnected to the Brivis Touch Wi-Fi module');
     }
 
     // Reconciled every poll rather than only on the unavailable -> available
