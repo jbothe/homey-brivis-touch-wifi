@@ -20,9 +20,8 @@
   "brandColor": "#132A4D",
   "permissions": [],
   "images": {
-    "small": "/assets/images/small.png",
-    "large": "/assets/images/large.png",
-    "xlarge": "/assets/images/xlarge.png"
+    "small": "/assets/images/small.jpeg",
+    "large": "/assets/images/large.jpeg"
   },
   "author": {
     "name": "John Bothe",
@@ -276,7 +275,8 @@
       ],
       "images": {
         "small": "/drivers/zone/assets/images/small.png",
-        "large": "/drivers/zone/assets/images/large.png"
+        "large": "/drivers/zone/assets/images/large.png",
+        "xlarge": "/drivers/zone/assets/images/xlarge.png"
       },
       "pair": [
         {

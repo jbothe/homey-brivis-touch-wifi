@@ -45,7 +45,8 @@
   ],
   "images": {
     "small": "/drivers/zone/assets/images/small.png",
-    "large": "/drivers/zone/assets/images/large.png"
+    "large": "/drivers/zone/assets/images/large.png",
+    "xlarge": "/drivers/zone/assets/images/xlarge.png"
   },
   "pair": [
     {

@@ -19,9 +19,8 @@
   "brandColor": "#132A4D",
   "permissions": [],
   "images": {
-    "small": "/assets/images/small.png",
-    "large": "/assets/images/large.png",
-    "xlarge": "/assets/images/xlarge.png"
+    "small": "/assets/images/small.jpeg",
+    "large": "/assets/images/large.jpeg"
   },
   "author": {
     "name": "John Bothe",

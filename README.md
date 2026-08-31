@@ -108,5 +108,19 @@ plus manual workflows to bump the app version and publish.
 Connects, discovers, and controls heat/cool/evap mode, per-zone temperature and on/off, fan, pump,
 and polls for out-of-band changes. Has a starter set of Flow cards (above). Not yet implemented:
 schedule/advance/manual controls (read for diagnostics, not exposed as capabilities or actions), and
-a manual IP override (the module must be reachable via UDP broadcast discovery for now). The zone
-driver's icons are still placeholders, not real artwork.
+a manual IP override (the module must be reachable via UDP broadcast discovery for now).
+
+## App Store assets
+
+- `assets/icon.svg` — the Brivis wordmark, white on a 960x960 canvas. It is drawn white because
+  Homey paints `brandColor` (`#132A4D`, the Brivis navy) *behind* the icon; the vendor's own navy
+  would be invisible against it.
+- `drivers/zone/assets/icon.svg` — the fingerprint mark the official Brivis/Rinnai Touch phone
+  app uses as its own icon; it is the artwork owners of the system already recognise, and it
+  plays on the "Touch" name. Deliberately distinct from the app icon above, which the Homey
+  guidelines require (a driver must not re-use the app's icon).
+- `drivers/zone/assets/images/` — product shot of the module, on white, at 75/500/1000 px square.
+- `assets/images/` — app image at 250x175 and 500x350 (10:7). The optional 1000x700 XLarge is
+  not supplied, so the manifest declares only `small` and `large`; add both together if a
+  higher-resolution original turns up.
+
