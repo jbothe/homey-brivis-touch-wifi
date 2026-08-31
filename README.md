@@ -123,4 +123,6 @@ a manual IP override (the module must be reachable via UDP broadcast discovery f
 - `assets/images/` — app image at 250x175 and 500x350 (10:7). The optional 1000x700 XLarge is
   not supplied, so the manifest declares only `small` and `large`; add both together if a
   higher-resolution original turns up.
-
+- `README.txt` — the App Store listing text (`homey app publish` requires this file, and refuses
+  to run without it). Plain text only: no Markdown, no URLs, one to two paragraphs. It is a
+  separate file from this one, which is the developer readme and is not shown in the store.
