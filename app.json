@@ -351,6 +351,7 @@
       "getable": true,
       "setable": false,
       "uiComponent": "sensor",
+      "icon": "/assets/rt_zone_active.svg",
       "insightsTitleTrue": {
         "en": "Started actively heating/cooling"
       },

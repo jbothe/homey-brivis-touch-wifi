@@ -20,12 +20,12 @@ const UNAVAILABLE_MESSAGE = 'Lost connection to the Brivis Touch Wi-Fi module';
 // Repeat the state line this often even when nothing has changed, so a quiet
 // log still shows the app polling and what it last saw. 20 polls is ~5 min.
 const POLLS_PER_STATE_HEARTBEAT = 20;
-// Dumps the module's raw status group next to each state line. Currently on to
-// investigate zone A reporting a target the wall controller disagrees with;
-// turn it off once that is settled, as it costs a few hundred bytes per change.
-// It is the only way to work out which protocol field is authoritative, since
-// the path table is reverse engineered.
-const LOG_RAW_STATUS = true;
+// Dumps the module's raw status group next to each state line. Debug aid, off
+// in the repo: it costs a few hundred bytes of log per change. Flip it on
+// locally when a reading disagrees with the wall controller - the path table is
+// reverse engineered, so the module's own frame is the only way to work out
+// which protocol field is authoritative.
+const LOG_RAW_STATUS = false;
 
 export interface RinnaiSyncableDevice {
   syncFromService(): void;
