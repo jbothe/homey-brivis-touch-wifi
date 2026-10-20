@@ -34,6 +34,28 @@ but never writes them, even where the protocol would allow it:
 
 "Actively heating/cooling" prefers the per-zone field on multi-setpoint hardware and falls back to
 the unit-wide flag otherwise, because the per-zone path does not exist on single-setpoint systems.
+In evaporative mode neither field tracks the cooler, so a zone counts as active while the cooler's
+fan or pump is actually running (including pre-wet and Manual fan-only) and, on multi-setpoint
+systems, the zone is switched on.
+
+### Evaporative mode
+
+The cooler has no target temperature, so the setpoint is removed while the unit is in evaporative
+mode, and the controls follow the Networker's own two ways of running it:
+
+| Cooler control | You set | The Networker sets |
+| --- | --- | --- |
+| Manual | fan speed, pump | nothing |
+| Auto | comfort level, 1 (warmest) to 16 (coolest) | fan, fan speed, pump |
+
+Every control stays on screen in both. One that does not apply reads as unknown or shows what the
+unit is doing, and changing it is refused, so Homey puts it back: the comfort level in Manual, and
+the fan, fan speed and pump in Auto. In Auto the fan and pump show whether they are actually running.
+Switch between Auto and Manual to take them over. The module does not report the fan speed it picks in Auto, so it reads as
+unknown. A Pre-wetting status covers the few minutes in which the pump wets the pads before the fan comes
+on, whether the cooler started it in Auto or you turned the pump on in Manual. In Manual the fan
+control keeps showing what you set, though the fan waits for pre-wet to finish. Cooler control is shown in place of the control mode status, which reads the same
+field in the unit but means following a schedule in heating/cooling.
 
 ### On/off is mode-aware
 
@@ -79,12 +101,13 @@ Two failure modes are handled deliberately:
 
 | Card | Trigger | Condition | Action |
 | --- | --- | --- | --- |
-| Operating mode | changed to | is / is not | set to |
 | Actively heating/cooling | changed | is / is not | n/a, read-only |
 | Fan speed | | | set to 1 to 16 |
+| Cooler control | | is / is not | set to Auto or Manual |
+| Comfort level | | | set to 1 to 16, in Auto only |
 
-On/off and the temperatures are standard Homey capabilities, so Homey provides their cards
-automatically. The three schedule and control-mode statuses have no cards yet.
+On/off, the operating mode (Homey's thermostat mode: heat, cool, evaporative or off) and the
+temperatures are standard Homey capabilities, so Homey provides their cards automatically. The three schedule and control-mode statuses have no cards yet.
 
 ## Development
 

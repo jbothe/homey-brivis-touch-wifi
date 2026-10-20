@@ -15,10 +15,13 @@
     "rt_schedule_override",
     "rt_schedule_period",
     "onoff",
-    "rt_operating_mode",
+    "thermostat_mode",
     "onoff.fan",
     "rt_fan_speed",
-    "onoff.pump"
+    "onoff.pump",
+    "rt_evap_control",
+    "rt_comfort_level",
+    "rt_prewet"
   ],
   "capabilitiesOptions": {
     "target_temperature": {
@@ -33,7 +36,8 @@
         "nl": "Systeem aan/uit",
         "fr": "Système marche/arrêt",
         "de": "System Ein/Aus"
-      }
+      },
+      "uiState": true
     },
     "onoff.fan": {
       "title": {
@@ -50,6 +54,46 @@
         "fr": "Pompe évaporative",
         "de": "Verdunstungspumpe"
       }
+    },
+    "thermostat_mode": {
+      "values": [
+        {
+          "id": "heat",
+          "title": {
+            "en": "Heat",
+            "nl": "Verwarmen",
+            "fr": "Chauffage",
+            "de": "Heizen"
+          }
+        },
+        {
+          "id": "cool",
+          "title": {
+            "en": "Cool",
+            "nl": "Koelen",
+            "fr": "Refroidissement",
+            "de": "Kühlen"
+          }
+        },
+        {
+          "id": "evap",
+          "title": {
+            "en": "Evaporative",
+            "nl": "Verdampingskoeling",
+            "fr": "Refroidissement évaporatif",
+            "de": "Verdunstungskühlung"
+          }
+        },
+        {
+          "id": "off",
+          "title": {
+            "en": "Off",
+            "nl": "Uit",
+            "fr": "Arrêt",
+            "de": "Aus"
+          }
+        }
+      ]
     }
   },
   "platforms": [

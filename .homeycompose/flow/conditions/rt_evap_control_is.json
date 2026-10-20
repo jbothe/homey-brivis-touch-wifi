@@ -1,0 +1,52 @@
+{
+  "id": "rt_evap_control_is",
+  "title": {
+    "en": "The cooler control !{{is|is not}}",
+    "nl": "De koelerregeling !{{is|is niet}}",
+    "fr": "La commande du rafraîchisseur !{{est|n'est pas}}",
+    "de": "Die Kühlersteuerung !{{ist|ist nicht}}"
+  },
+  "titleFormatted": {
+    "en": "The cooler control !{{is|is not}} [[rt_evap_control]]",
+    "nl": "De koelerregeling !{{is|is niet}} [[rt_evap_control]]",
+    "fr": "La commande du rafraîchisseur !{{est|n'est pas}} [[rt_evap_control]]",
+    "de": "Die Kühlersteuerung !{{ist|ist nicht}} [[rt_evap_control]]"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=zone"
+    },
+    {
+      "name": "rt_evap_control",
+      "type": "dropdown",
+      "title": {
+        "en": "control",
+        "nl": "regeling",
+        "fr": "commande",
+        "de": "Steuerung"
+      },
+      "values": [
+        {
+          "id": "auto",
+          "title": {
+            "en": "Auto",
+            "nl": "Automatisch",
+            "fr": "Automatique",
+            "de": "Automatik"
+          }
+        },
+        {
+          "id": "manual",
+          "title": {
+            "en": "Manual",
+            "nl": "Handmatig",
+            "fr": "Manuel",
+            "de": "Manuell"
+          }
+        }
+      ]
+    }
+  ]
+}

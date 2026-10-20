@@ -1,0 +1,16 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Comfort level",
+    "nl": "Comfortniveau",
+    "fr": "Niveau de confort",
+    "de": "Komfortstufe"
+  },
+  "getable": true,
+  "setable": true,
+  "uiComponent": "slider",
+  "min": 1,
+  "max": 16,
+  "step": 1,
+  "decimals": 0
+}

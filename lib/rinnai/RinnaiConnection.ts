@@ -65,6 +65,12 @@ const STRING_TO_MODE: Record<RinnaiMode, number> = { heat: 0, cool: 1, evap: 2 }
 export type RinnaiControlMode = 'manual' | 'schedule';
 const CONTROL_MODE_TO_STRING: Record<number, RinnaiControlMode> = { 0: 'manual', 1: 'schedule' };
 
+// Evap's GSO.OP is the same A/M field as heat/cool's OP, but there it means
+// the Networker holding a comfort level, not following a schedule.
+export type RinnaiEvapControl = 'auto' | 'manual';
+const EVAP_CONTROL_TO_STRING: Record<number, RinnaiEvapControl> = { 0: 'manual', 1: 'auto' };
+const STRING_TO_EVAP_CONTROL: Record<RinnaiEvapControl, number> = { manual: 0, auto: 1 };
+
 export type RinnaiScheduleOverride = 'none' | 'advance' | 'operation';
 const SCHEDULE_OVERRIDE_TO_STRING: Record<number, RinnaiScheduleOverride> = { 0: 'none', 1: 'advance', 2: 'operation' };
 
@@ -282,6 +288,21 @@ export class RinnaiConnection {
     return this.service.getPumpState();
   }
 
+  /** Auto or Manual; undefined outside evap. */
+  getEvapControl(): RinnaiEvapControl | undefined {
+    return EVAP_CONTROL_TO_STRING[this.service.getEvapControlMode()];
+  }
+
+  /** Whether the cooler is pre-wetting its pads; undefined outside evap. */
+  getPreWet(): boolean | undefined {
+    return this.service.getPreWet();
+  }
+
+  /** 1 to 16 as the Networker shows it; undefined outside evap Auto. */
+  getComfortLevel(): number | undefined {
+    return this.service.getComfortLevel();
+  }
+
   async setMode(mode: RinnaiMode): Promise<void> {
     await this.service.setMode(STRING_TO_MODE[mode]);
   }
@@ -310,6 +331,14 @@ export class RinnaiConnection {
    */
   async setUserEnabled(value: boolean, zone: RinnaiZone): Promise<void> {
     await this.service.setUserEnabled(value, zone);
+  }
+
+  async setEvapControl(value: RinnaiEvapControl): Promise<void> {
+    await this.service.setEvapControlMode(STRING_TO_EVAP_CONTROL[value]);
+  }
+
+  async setComfortLevel(value: number): Promise<void> {
+    await this.service.setComfortLevel(Math.round(value));
   }
 
   async setFanState(value: boolean): Promise<void> {

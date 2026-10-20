@@ -1,0 +1,25 @@
+{
+  "type": "boolean",
+  "title": {
+    "en": "Pre-wetting",
+    "nl": "Voorbevochtigen",
+    "fr": "Pré-humidification",
+    "de": "Vorbefeuchtung"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "icon": "/assets/rt_zone_active.svg",
+  "insightsTitleTrue": {
+    "en": "Started pre-wetting",
+    "nl": "Begon met voorbevochtigen",
+    "fr": "A commencé la pré-humidification",
+    "de": "Vorbefeuchtung gestartet"
+  },
+  "insightsTitleFalse": {
+    "en": "Stopped pre-wetting",
+    "nl": "Stopte met voorbevochtigen",
+    "fr": "A terminé la pré-humidification",
+    "de": "Vorbefeuchtung beendet"
+  }
+}

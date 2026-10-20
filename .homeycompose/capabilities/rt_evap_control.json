@@ -1,0 +1,32 @@
+{
+  "type": "enum",
+  "title": {
+    "en": "Cooler control",
+    "nl": "Koelerregeling",
+    "fr": "Commande du rafraîchisseur",
+    "de": "Kühlersteuerung"
+  },
+  "getable": true,
+  "setable": true,
+  "uiComponent": "picker",
+  "values": [
+    {
+      "id": "auto",
+      "title": {
+        "en": "Auto",
+        "nl": "Automatisch",
+        "fr": "Automatique",
+        "de": "Automatik"
+      }
+    },
+    {
+      "id": "manual",
+      "title": {
+        "en": "Manual",
+        "nl": "Handmatig",
+        "fr": "Manuel",
+        "de": "Manuell"
+      }
+    }
+  ]
+}

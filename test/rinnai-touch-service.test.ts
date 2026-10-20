@@ -79,7 +79,7 @@ function heatStatus(st: string) {
   ];
 }
 
-/** An evap payload. `sp` is the raw comfort level (19-34). */
+/** An evap payload, in Manual. `sp` is the raw comfort level (19 coolest - 34 warmest). */
 function evapStatus(sp: string) {
   return [
     {
@@ -180,46 +180,170 @@ test('evap keeps its own separate fan field', async () => {
 //
 // Evap setpoints
 //
+// Manual has none - just zone on/off, fan speed and pump - and the module
+// rejects writes to GSO.SP there. Auto holds a comfort level, which the
+// Networker shows as 1 (warmest) - 16 (coolest) and the module stores
+// inverted, as 34 - 19.
 
-test('evap comfort levels survive a decode/encode round trip', async () => {
-  // setTargetTemperature() compares encoded values, which is only sound if
-  // encode(decode(level)) is the identity across the whole range.
-  const { service } = await startService(evapStatus('25'));
+/** evapStatus with GSO.OP set: 'A' Auto, 'M' Manual. */
+function evapWithControl(op: 'A' | 'M', sp: string) {
+  const status = evapStatus(sp);
+  (status[1] as { ECOM: { GSO: Record<string, string> } }).ECOM.GSO.OP = op;
+  return status;
+}
 
-  for (let level = 19; level <= 34; level += 1) {
-    const temperature = service.decodeTargetTemperature(String(level));
-    assert.equal(service.encodeTargetTemperature(temperature), level,
-      `comfort level ${level} did not round trip (via ${temperature} degrees)`);
-  }
+test('evap reports no target temperature', async () => {
+  const { service } = await startService(evapWithControl('A', '25'));
+
+  assert.equal(service.getTargetTemperature('A'), undefined);
+  assert.equal(service.getTargetTemperature('U'), undefined);
 });
 
-test('an evap setpoint that encodes to the current comfort level sends nothing', async () => {
-  // 23 temperatures map onto 16 comfort levels, so 10 and 9 both encode to 20.
-  // Sending that command changed nothing the module reports, so the repository
-  // never saw it confirmed: three attempts, 30 sec holding the serialized
-  // queue, then a failure the user could do nothing about.
-  const { service, repository } = await startService(evapStatus('20'));
+test('setting a target temperature in evap fails without sending anything', async () => {
+  const { service, repository } = await startService(evapWithControl('A', '25'));
 
-  assert.equal(service.getTargetTemperature('A'), 9, 'comfort 20 presents as 9 degrees');
-
-  await service.setTargetTemperature(10, 'A');
-
-  assert.deepEqual(repository.sent, [], 'no command should reach the module');
+  await assert.rejects(() => service.setTargetTemperature(16, 'A'), /no target temperature/);
+  assert.deepEqual(repository.sent, []);
 });
 
-test('an evap setpoint that encodes to a different comfort level is sent', async () => {
-  const { service, repository } = await startService(evapStatus('20'));
+test('evap Auto reports the comfort level as the Networker shows it', async () => {
+  // Both ends confirmed on a real unit: coolest is raw 19, warmest raw 34.
+  const coolest = await startService(evapWithControl('A', '19'));
+  const warmest = await startService(evapWithControl('A', '34'));
 
-  await service.setTargetTemperature(11, 'A');
-
-  assert.deepEqual(repository.sent.map((r) => [r.path, r.state]), [['ECOM.GSO.SP', '21']]);
+  assert.equal(coolest.service.isEvapAuto, true);
+  assert.equal(coolest.service.getComfortLevel(), 16);
+  assert.equal(warmest.service.getComfortLevel(), 1);
 });
 
-test('evap zones share one setpoint, since the protocol path has no zone in it', async () => {
-  const { service } = await startService(evapStatus('20'));
+test('a comfort level is sent as the raw value the module stores', async () => {
+  const { service, repository } = await startService(evapWithControl('A', '25'));
 
-  assert.equal(service.getTargetTemperature('A'), 9);
-  assert.equal(service.getTargetTemperature('B'), 9);
+  await service.setComfortLevel(16);
+  await service.setComfortLevel(1);
+
+  assert.deepEqual(repository.sent.map((r) => [r.path, r.state]),
+    [['ECOM.GSO.SP', '19'], ['ECOM.GSO.SP', '34']]);
+});
+
+test('evap Manual has no comfort level and refuses to set one', async () => {
+  // The 11:26 failure: SP 24 sent in Manual, three timeouts, then rejected.
+  const { service, repository } = await startService(evapWithControl('M', '24'));
+
+  assert.equal(service.getComfortLevel(), undefined);
+  await assert.rejects(() => service.setComfortLevel(6), /in Auto/);
+  assert.deepEqual(repository.sent, []);
+});
+
+test('out-of-range comfort levels are refused', async () => {
+  const { service, repository } = await startService(evapWithControl('A', '25'));
+
+  await assert.rejects(() => service.setComfortLevel(0), /1 to 16/);
+  await assert.rejects(() => service.setComfortLevel(17), /1 to 16/);
+  assert.deepEqual(repository.sent, []);
+});
+
+test('evap control switches between Auto and Manual', async () => {
+  const { service, repository } = await startService(evapWithControl('M', '25'));
+
+  assert.equal(service.getEvapControlMode(), service.ControlModes.MANUAL);
+  await service.setEvapControlMode(service.ControlModes.SCHEDULE);
+
+  assert.deepEqual(repository.sent.map((r) => [r.path, r.state]), [['ECOM.GSO.OP', 'A']]);
+});
+
+test('evap control is undefined, and cannot be set, outside evap', async () => {
+  const { service, repository } = await startService(heatStatus('N'));
+
+  assert.equal(service.getEvapControlMode(), undefined);
+  assert.equal(service.getComfortLevel(), undefined);
+  await assert.rejects(() => service.setEvapControlMode(service.ControlModes.SCHEDULE));
+  assert.deepEqual(repository.sent, []);
+});
+
+/** A real evap Auto frame, captured with the fan and pump running. */
+function evapAutoRunningStatus() {
+  return [
+    {
+      SYST: {
+        CFG: {
+          MTSP: 'Y', TU: 'C', ZA: 'Living', ZB: 'Beds', ZC: '', ZD: '',
+        },
+        AVM: { HG: 'N', CG: 'N', EC: 'Y' },
+        OSS: { MD: 'E' },
+      },
+    },
+    {
+      ECOM: {
+        CFG: {
+          ZUIS: 'N', ZAIS: 'Y', ZBIS: 'Y', ZCIS: 'N', ZDIS: 'N', TP: 'N',
+        },
+        GSO: {
+          SW: 'N', OP: 'A', SP: '21', ZUUE: 'N', ZAUE: 'Y', ZBUE: 'N', ZCUE: 'N', ZDUE: 'N',
+        },
+        GSS: {
+          PW: 'N', BY: 'N', PO: 'Y', FO: 'Y', SN: 'N', MT: '234', ZUAE: 'N', ZAAE: 'Y', ZBAE: 'Y', ZCAE: 'N', ZDAE: 'N',
+        },
+        PSU: { AV: 'N', SFE: 'N' },
+      },
+    },
+  ];
+}
+
+test('evap Auto reads the running fan and pump, since GSO no longer carries them', async () => {
+  const { service } = await startService(evapAutoRunningStatus());
+
+  assert.equal(service.isEvapAuto, true);
+  assert.equal(service.getComfortLevel(), 14);
+  assert.equal(service.getPreWet(), false);
+  assert.equal(service.getFanState(), true, 'GSS.FO: the fan is running');
+  assert.equal(service.getPumpState(), true, 'GSS.PO: the pump is running');
+  assert.ok(Number.isNaN(service.getFanSpeed()), 'Auto does not report a fan speed');
+});
+
+test('pre-wet reads from GSS.PW, with the pump on and the fan not yet', async () => {
+  // Captured on a real unit just after picking the coolest level in Auto.
+  const status = evapAutoRunningStatus();
+  const gss = (status[1] as { ECOM: { GSS: Record<string, string> } }).ECOM.GSS;
+  Object.assign(gss, { PW: 'Y', PO: 'Y', FO: 'N' });
+  const { service } = await startService(status);
+
+  assert.equal(service.getPreWet(), true);
+  assert.equal(service.getPumpState(), true);
+  assert.equal(service.getFanState(), false);
+});
+
+test('pre-wet is undefined outside evap', async () => {
+  const { service } = await startService(heatStatus('N'));
+
+  assert.equal(service.getPreWet(), undefined);
+});
+
+test('evap Manual still reads the fan and pump settings', async () => {
+  // evapStatus has FS N and PS N in GSO and no FO/PO in GSS.
+  const { service } = await startService(evapWithControl('M', '25'));
+
+  assert.equal(service.getFanState(), true);
+  assert.equal(service.getPumpState(), true);
+});
+
+test('in evap Auto the fan, fan speed and pump are refused, since the Networker runs them', async () => {
+  const { service, repository } = await startService(evapWithControl('A', '25'));
+
+  await assert.rejects(() => service.setFanState(false), /Auto/);
+  await assert.rejects(() => service.setFanSpeed(10), /Auto/);
+  await assert.rejects(() => service.setPumpState(true), /Auto/);
+  assert.deepEqual(repository.sent, []);
+});
+
+test('in evap Manual the fan speed and pump are sent', async () => {
+  const { service, repository } = await startService(evapWithControl('M', '25'));
+
+  await service.setFanSpeed(10);
+  await service.setPumpState(false);
+
+  assert.deepEqual(repository.sent.map((r) => [r.path, r.state]),
+    [['ECOM.GSO.FL', '10'], ['ECOM.GSO.PS', 'F']]);
 });
 
 test('heat/cool setpoints are sent as plain degrees', async () => {
@@ -295,6 +419,93 @@ test('multi-setpoint active status stays per zone', async () => {
 
   assert.equal(service.getSystemActive('A'), true);
   assert.equal(service.getSystemActive('B'), false);
+});
+
+/** A real evap Manual frame, fan and pump stopped. Tweak GSO/GSS per test. */
+function evapManualStatus(gso: Record<string, string> = {}, gss: Record<string, string> = {}) {
+  const status = [
+    {
+      SYST: {
+        CFG: {
+          MTSP: 'Y', TU: 'C', ZA: 'Living', ZB: 'Beds', ZC: '', ZD: '',
+        },
+        AVM: { HG: 'N', CG: 'N', EC: 'Y' },
+        OSS: { MD: 'E' },
+      },
+    },
+    {
+      ECOM: {
+        CFG: {
+          ZUIS: 'N', ZAIS: 'Y', ZBIS: 'Y', ZCIS: 'N', ZDIS: 'N', TP: 'N',
+        },
+        GSO: {
+          SW: 'N', OP: 'M', FS: 'F', PS: 'F', FL: '04', ZUUE: 'N', ZAUE: 'Y', ZBUE: 'N', ZCUE: 'N', ZDUE: 'N',
+        },
+        GSS: {
+          PW: 'N', BY: 'N', PO: 'N', FO: 'N', SN: 'N', MT: '234', ZUAE: 'N', ZAAE: 'Y', ZBAE: 'Y', ZCAE: 'N', ZDAE: 'N',
+        },
+        PSU: { AV: 'N', SFE: 'N' },
+      },
+    },
+  ];
+  const { ECOM } = status[1] as { ECOM: { GSO: Record<string, string>, GSS: Record<string, string> } };
+  Object.assign(ECOM.GSO, gso);
+  Object.assign(ECOM.GSS, gss);
+  return status;
+}
+
+test('a switched-off evap zone is not active, though the module flags it so', async () => {
+  // Seen on a real unit with one of two zones on: ZBUE N but ZBAE Y.
+  const { service } = await startService(evapManualStatus({ FS: 'N' }, { FO: 'Y' }));
+
+  assert.equal(service.getAutoEnabled('B'), true, 'the raw flag is set');
+  assert.equal(service.getSystemActive('A'), true);
+  assert.equal(service.getSystemActive('B'), false, 'but zone B is switched off');
+});
+
+test('an evap zone with the fan and pump stopped is not active, though AE says so', async () => {
+  // Manual, everything stopped: ZAAE still Y, and BY is N whatever happens.
+  const { service } = await startService(evapManualStatus());
+
+  assert.equal(service.getAutoEnabled('A'), true, 'the raw flag is set');
+  assert.equal(service.getSystemActive('A'), false, 'but nothing is running');
+});
+
+test('an evap zone is active with only the pump running, as in pre-wet', async () => {
+  const { service } = await startService(evapManualStatus({}, { PO: 'Y', PW: 'Y' }));
+
+  assert.equal(service.getSystemActive('A'), true);
+});
+
+test('single-setpoint evap is active while the cooler runs, though BY reads N', async () => {
+  const status = evapManualStatus({ FS: 'N' }, { FO: 'Y' });
+  (status[0] as { SYST: { CFG: { MTSP: string } } }).SYST.CFG.MTSP = 'N';
+  const { service } = await startService(status);
+
+  assert.equal(service.getSystemActive('U'), true);
+});
+
+test('Manual pre-wet shows the fan as set, though the module holds it off', async () => {
+  // From a real unit, just after turning the pump on in Manual: FS N but FO N
+  // while PW is Y. The fan is the user's control in Manual, so it shows what
+  // they set rather than flipping off by itself; pre-wet explains the still air.
+  const { service } = await startService(evapManualStatus({ FS: 'N', PS: 'N' }, { PW: 'Y', PO: 'Y' }));
+
+  assert.equal(service.getFanState(), true);
+  assert.equal(service.getPumpState(), true);
+  assert.equal(service.getPreWet(), true);
+  assert.equal(service.getSystemActive('A'), true);
+});
+
+test('evap Manual reads the fan and pump settings, which agree with what runs', async () => {
+  // Fan-only, from a real unit: FS N with FO Y, PS F with PO N.
+  const { service } = await startService(evapManualStatus({ FS: 'N' }, { FO: 'Y' }));
+
+  assert.equal(service.isEvapAuto, false);
+  assert.equal(service.getFanState(), true);
+  assert.equal(service.getPumpState(), false);
+  assert.equal(service.getFanSpeed(), 4);
+  assert.equal(service.getComfortLevel(), undefined);
 });
 
 //

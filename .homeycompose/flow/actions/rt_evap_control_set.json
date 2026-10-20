@@ -1,0 +1,52 @@
+{
+  "id": "rt_evap_control_set",
+  "title": {
+    "en": "Set the cooler control to",
+    "nl": "Stel de koelerregeling in op",
+    "fr": "Régler la commande du rafraîchisseur sur",
+    "de": "Kühlersteuerung einstellen auf"
+  },
+  "titleFormatted": {
+    "en": "Set the cooler control to [[rt_evap_control]]",
+    "nl": "Stel de koelerregeling in op [[rt_evap_control]]",
+    "fr": "Régler la commande du rafraîchisseur sur [[rt_evap_control]]",
+    "de": "Kühlersteuerung einstellen auf [[rt_evap_control]]"
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=zone"
+    },
+    {
+      "name": "rt_evap_control",
+      "type": "dropdown",
+      "title": {
+        "en": "control",
+        "nl": "regeling",
+        "fr": "commande",
+        "de": "Steuerung"
+      },
+      "values": [
+        {
+          "id": "auto",
+          "title": {
+            "en": "Auto",
+            "nl": "Automatisch",
+            "fr": "Automatique",
+            "de": "Automatik"
+          }
+        },
+        {
+          "id": "manual",
+          "title": {
+            "en": "Manual",
+            "nl": "Handmatig",
+            "fr": "Manuel",
+            "de": "Manuell"
+          }
+        }
+      ]
+    }
+  ]
+}

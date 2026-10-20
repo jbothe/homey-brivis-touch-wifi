@@ -212,8 +212,11 @@ class RinnaiTouchApp extends Homey.App {
       .join(' | ');
 
     const pump = rinnai.hasEvaporative ? ` pump=${rinnai.getPumpState()}` : '';
+    const evap = rinnai.mode === 'evap'
+      ? ` evapControl=${rinnai.getEvapControl()} comfort=${rinnai.getComfortLevel()} preWet=${rinnai.getPreWet()}`
+      : '';
 
-    const line = `mode=${rinnai.mode} on=${rinnai.isOn} fan=${rinnai.getFanState()} fanSpeed=${rinnai.getFanSpeed()}${pump} || ${zones}`;
+    const line = `mode=${rinnai.mode} on=${rinnai.isOn} fan=${rinnai.getFanState()} fanSpeed=${rinnai.getFanSpeed()}${pump}${evap} || ${zones}`;
 
     // A heating system spends most of the day in one state, so logging this
     // every poll was ~5.7k identical lines a day crowding out everything worth
