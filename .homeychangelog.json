@@ -1,5 +1,11 @@
 {
   "1.0.0": {
     "en": "First version!"
+  },
+  "1.1.0": {
+    "en": "Evaporative coolers gain Auto mode: switch between Auto and Manual, set the comfort level, and see when the pads are pre-wetting. In Auto the fan and pump show what is actually running. Operating mode is now Homey's thermostat mode, so the dashboard shows the system as off when it is; Flows using the old operating mode cards need those cards replaced. Zones no longer read as actively cooling while switched off.",
+    "nl": "Verdampingskoelers krijgen de automatische modus: schakel tussen Automatisch en Handmatig, stel het comfortniveau in en zie wanneer de pads worden voorbevochtigd. In Automatisch tonen de ventilator en pomp wat er werkelijk draait. De bedrijfsmodus is nu de thermostaatmodus van Homey, zodat het dashboard het systeem als uit toont wanneer het uit is; Flows met de oude bedrijfsmoduskaarten moeten die kaarten vervangen. Zones staan niet langer als actief koelend terwijl ze uit staan.",
+    "fr": "Les rafraîchisseurs évaporatifs gagnent le mode Automatique : passez d'Automatique à Manuel, réglez le niveau de confort et voyez quand les tampons sont en pré-humidification. En Automatique, le ventilateur et la pompe indiquent ce qui tourne réellement. Le mode de fonctionnement est désormais le mode thermostat de Homey, si bien que le tableau de bord affiche l'installation éteinte lorsqu'elle l'est ; les Flows utilisant les anciennes cartes de mode de fonctionnement doivent remplacer ces cartes. Les zones éteintes n'apparaissent plus comme refroidissant activement.",
+    "de": "Verdunstungskühler erhalten den Automatikbetrieb: zwischen Automatik und Manuell wechseln, die Komfortstufe einstellen und sehen, wann die Kühlmatten vorbefeuchtet werden. In Automatik zeigen Lüfter und Pumpe, was tatsächlich läuft. Der Betriebsmodus ist jetzt der Thermostatmodus von Homey, sodass das Dashboard die Anlage als aus zeigt, wenn sie aus ist; Flows mit den alten Betriebsmodus-Karten müssen diese Karten ersetzen. Ausgeschaltete Zonen werden nicht mehr als aktiv kühlend angezeigt."
   }
 }

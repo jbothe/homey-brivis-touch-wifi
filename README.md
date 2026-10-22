@@ -130,7 +130,8 @@ unhelpful "Tsconfig validation failed".
 - `lib/rinnai/` vendored protocol core (UDP discovery, TCP framing, status parsing, commands) plus
   `RinnaiConnection.ts`, the typed wrapper everything else uses.
 - `drivers/zone/` the driver and device. `driver.ts` derives a paired device's capabilities from
-  the manifest, minus `onoff.pump`, which the device adds and removes from the live mode.
+  the manifest, minus the evap-only capabilities (pump, cooler control, comfort level, pre-wetting),
+  which the device adds and removes from the live mode.
 - `test/` unit tests for the protocol core: path resolution, status parsing, command encoding, TCP
   framing, failure paths, and a round trip against a fake module.
 - `.homeycompose/` source of truth for `app.json`. Never edit `app.json` directly; it is generated.
