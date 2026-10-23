@@ -2,12 +2,28 @@ name: Publish Homey App
 on:
   workflow_dispatch:
 
+# Needed to push the release tag and create the GitHub release
+permissions:
+  contents: write
+
 jobs:
   main:
     name: Publish Homey App
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+
+      # The tag is created after the upload, so a version that was already released
+      # would only fail at the very end - after Homey had taken a duplicate build.
+      - name: Check the version is unreleased
+        id: version
+        run: |
+          version=$(jq -r .version app.json)
+          if git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null; then
+            echo "::error::v$version is already tagged. Bump the version before publishing."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       # Same reason as homey-app-validate.yml's own install step: this action compiles the app
       # too, so node_modules must exist before it runs or tsc can't resolve tsconfig's extends.
@@ -22,6 +38,19 @@ jobs:
         id: publish
         with:
           personal_access_token: ${{ secrets.HOMEY_PAT }}
+
+      # Tagged here rather than when the version is bumped, so the tag always marks the
+      # commit that was actually uploaded. The version bump goes in the release PR by hand:
+      # athombv's version action took a single English changelog string and skipped
+      # package.json.
+      - name: Tag and create the GitHub release
+        run: |
+          gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" \
+            --notes "$(jq -r --arg v "$VERSION" '.[$v].en // ""' .homeychangelog.json)" \
+            --generate-notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
 
       - name: URL
         run: |
