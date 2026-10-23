@@ -70,3 +70,13 @@ test('getState returns undefined for a field absent from the payload', () => {
 
   assert.equal(svc.getState('TargetTemp', status, 'A'), undefined);
 });
+
+test('getState returns undefined when the mode group is missing', () => {
+  const svc = new StateService(makeLogger());
+  svc.hasMultiSetPoint = true;
+
+  const status = [{ SYST: { OSS: { MD: 'H' } } }];
+
+  assert.equal(svc.getState('Mode', status), 'H');
+  assert.equal(svc.getState('TargetTemp', status, 'A'), undefined);
+});

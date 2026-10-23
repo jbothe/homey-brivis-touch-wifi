@@ -537,3 +537,29 @@ test('evap reports no schedule period, since the protocol has no path for it', a
 
   assert.equal(service.getSchedulePeriod('A'), undefined);
 });
+
+//
+// Frames missing the mode group
+//
+// The module has been seen sending SYST on its own. That frame reached
+// StateService.getState() through the socket's 'data' callback and threw on
+// Object.keys(undefined), which took the app down.
+
+test('a status frame with only SYST keeps the last full state', async () => {
+  const { service, repository } = await startService(heatStatus('N'));
+
+  assert.doesNotThrow(() => repository.emit('status', [heatStatus('F')[0]]));
+
+  assert.equal(service.getState(), true, 'the SYST-only frame must not blank the state');
+  assert.deepEqual(service.zones, ['A', 'B']);
+});
+
+test('a status frame the service cannot parse is discarded rather than thrown', async () => {
+  const { service, repository } = await startService(heatStatus('N'));
+  const status = heatStatus('F');
+  status[0].SYST!.OSS.MD = 'X';
+
+  assert.doesNotThrow(() => repository.emit('status', status));
+
+  assert.equal(service.getState(), true);
+});
