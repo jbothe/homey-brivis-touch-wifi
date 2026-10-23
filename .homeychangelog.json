@@ -9,6 +9,9 @@
     "de": "Verdunstungskühler erhalten den Automatikbetrieb: zwischen Automatik und Manuell wechseln, die Komfortstufe einstellen und sehen, wann die Kühlmatten vorbefeuchtet werden. In Automatik zeigen Lüfter und Pumpe, was tatsächlich läuft. Der Betriebsmodus ist jetzt der Thermostatmodus von Homey, sodass das Dashboard die Anlage als aus zeigt, wenn sie aus ist; Flows mit den alten Betriebsmodus-Karten müssen diese Karten ersetzen. Ausgeschaltete Zonen werden nicht mehr als aktiv kühlend angezeigt."
   },
   "1.1.1": {
-    "en": "Fixes a crash when the Touch module sends an incomplete status update."
+    "en": "Fixes a crash when the Touch module sends an incomplete status update.",
+    "nl": "Verhelpt een crash wanneer de Touch-module een onvolledige statusupdate stuurt.",
+    "fr": "Corrige un plantage lorsque le module Touch envoie une mise à jour d'état incomplète.",
+    "de": "Behebt einen Absturz, wenn das Touch-Modul eine unvollständige Statusmeldung sendet."
   }
 }
