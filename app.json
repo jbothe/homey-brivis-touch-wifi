@@ -39,6 +39,14 @@
       }
     ]
   },
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "email": "jbothe@gmail.com",
+        "currency": "AUD"
+      }
+    }
+  },
   "flow": {
     "triggers": [
       {
