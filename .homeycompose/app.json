@@ -37,5 +37,13 @@
         "name": "David Matthews"
       }
     ]
+  },
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "email": "jbothe@gmail.com",
+        "currency": "AUD"
+      }
+    }
   }
 }
